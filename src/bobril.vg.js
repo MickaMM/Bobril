@@ -17,7 +17,8 @@
     function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
         var angleInRadians = angleInDegrees * Math.PI / 180.0;
         return {
-            x: centerX + (radius * Math.sin(angleInRadians)), y: centerY - (radius * Math.cos(angleInRadians))
+            x: centerX + (radius * Math.sin(angleInRadians)),
+            y: centerY - (radius * Math.cos(angleInRadians))
         };
     }
 
@@ -27,7 +28,7 @@
         if (absDeltaAngle > 360 - 0.01) {
             if (endAngle > startAngle)
                 endAngle = startAngle - 359.9;
-            else
+else
                 endAngle = startAngle + 359.9;
             if (radius === 0)
                 return "";
@@ -35,7 +36,9 @@
         } else {
             if (radius === 0) {
                 return [
-                    startWithLine ? "L" : "M", x, y
+                    startWithLine ? "L" : "M",
+                    x,
+                    y
                 ].join(" ");
             }
         }
@@ -44,7 +47,17 @@
         var arcSweep = (absDeltaAngle <= 180) ? "0" : "1";
         var largeArg = (endAngle > startAngle) ? "0" : "1";
         var d = [
-            (startWithLine ? "L" : "M"), start.x, start.y, "A", radius, radius, 0, arcSweep, largeArg, end.x, end.y
+            (startWithLine ? "L" : "M"),
+            start.x,
+            start.y,
+            "A",
+            radius,
+            radius,
+            0,
+            arcSweep,
+            largeArg,
+            end.x,
+            end.y
         ].join(" ");
         if (close)
             d += "Z";
@@ -83,7 +96,7 @@
         if (absDeltaAngle > 360 - 0.01) {
             if (endAngle > startAngle)
                 endAngle = startAngle - 359.9;
-            else
+else
                 endAngle = startAngle + 359.9;
             if (radius === 0)
                 return "";
@@ -91,13 +104,17 @@
         } else {
             if (radius === 0) {
                 return (startWithLine ? "l" : "m") + [
-                    vmlCoord(x), vmlCoord(y)
+                    vmlCoord(x),
+                    vmlCoord(y)
                 ].join(",");
             }
         }
         var radiusInStr = vmlCoord(radius);
         var d = (startWithLine ? "ae" : "al") + [
-            vmlCoord(x), vmlCoord(y), radiusInStr, radiusInStr,
+            vmlCoord(x),
+            vmlCoord(y),
+            radiusInStr,
+            radiusInStr,
             ((90 - startAngle) * 65536).toFixed(0),
             ((startAngle - endAngle) * 65536).toFixed(0)
         ].join(",");
@@ -182,7 +199,7 @@
         while (index < path.length) {
             if (isNaN(path[index])) {
                 var command = path[index++];
-                descriptor = commands[command];
+                descriptor = (commands)[command];
                 paramCount = descriptor[0] >> 0;
                 handler = descriptor[1];
             }
@@ -227,7 +244,7 @@
             v = data.fillOpacity;
             if (v)
                 sInner += "<v:fill color=\"" + vfill + "\" opacity=\"" + v + "\"/>";
-            else
+else
                 s += " fillcolor=\"" + vfill + "\"";
         } else {
             s += " filled=\"false\"";
@@ -261,7 +278,7 @@
         while (index < path.length) {
             if (isNaN(path[index])) {
                 var command = path[index++];
-                descriptor = commands[command];
+                descriptor = (commands)[command];
                 paramCount = descriptor[0] >> 0;
                 handler = descriptor[2];
             }
@@ -285,13 +302,13 @@
 
     var defaultvml = "#default#VML";
     var urldefaultvml = "url(" + defaultvml + ")";
-    var implType = (window.SVGAngle || document.implementation.hasFeature("http://www.w3.org/TR/SVG11/feature#BasicStructure", "1.1") ? 1 : 2);
+    var implType = ((window).SVGAngle || document.implementation.hasFeature("http://www.w3.org/TR/SVG11/feature#BasicStructure", "1.1") ? 1 : 2);
     if (implType == 2) {
         var testingdiv = document.createElement("div");
         testingdiv.innerHTML = '<v:shape adj="1"/>';
         var testingshape = testingdiv.firstChild;
-        testingshape.style.behavior = urldefaultvml;
-        if (!(testingshape && typeof testingshape.adj == "object")) {
+        (testingshape).style.behavior = urldefaultvml;
+        if (!(testingshape && typeof (testingshape).adj == "object")) {
             implType = 0;
         }
     }

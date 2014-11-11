@@ -1,4 +1,4 @@
-﻿/// <reference path="../../src/bobril.d.ts"/>
+/// <reference path="../../src/bobril.d.ts"/>
 var InputApp;
 (function (InputApp) {
     function h(tag) {
@@ -17,8 +17,6 @@ var InputApp;
         value = v;
         b.invalidate();
     }
-
-    
 
     var TextInputComponent = (function () {
         function TextInputComponent() {

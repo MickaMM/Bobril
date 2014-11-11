@@ -10,9 +10,9 @@
         if (!c.onChange)
             return false;
         var ctx = node.ctx;
-        var v = target.value;
-        if (ctx["b$value"] !== v) {
-            ctx["b$value"] = v;
+        var v = (target).value;
+        if ((ctx)["b$value"] !== v) {
+            (ctx)["b$value"] = v;
             c.onChange(ctx, v);
         }
         return false;

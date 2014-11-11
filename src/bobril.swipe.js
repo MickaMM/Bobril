@@ -53,11 +53,6 @@
         if (!touchStarted)
             return false;
 
-        // Android will send a touchcancel if it thinks we're starting to scroll.
-        // So when the total distance (+ or - or both) exceeds 10px in either direction,
-        // we either:
-        // - On totalX > totalY, we send preventDefault() and treat this as a swipe.
-        // - On totalY > totalX, we let the browser handle it as a scroll.
         if (!startPos)
             return false;
         var coords = getCoordinates(event);
@@ -71,7 +66,6 @@
             return false;
         }
 
-        // One of totalX or totalY has exceeded the buffer, so decide on swipe vs. scroll.
         if (totalY > totalX) {
             // Allow native scrolling to take over.
             touchStarted = false;
@@ -103,30 +97,22 @@
     var valid;
 
     function analyzeSwipe(coords) {
-        // Check that it's within the coordinates.
-        // Absolute vertical distance must be within tolerances.
-        // Horizontal distance, we take the current X - the starting X.
-        // This is negative for leftward swipes and positive for rightward swipes.
-        // After multiplying by the direction (-1 for left, +1 for right), legal swipes
-        // (ie. same direction as the directive wants) will have a positive delta and
-        // illegal ones a negative delta.
-        // Therefore this delta must be positive, and larger than the minimum.
         if (!startCoords)
-            return 0 /* Invalid */;
+            return Swipe.Invalid;
         var deltaY = Math.abs(coords.y - startCoords.y);
         var deltaX = coords.x - startCoords.x;
-        var swipe = 0 /* Invalid */;
+        var swipe = Swipe.Invalid;
         if (!valid)
-            return 0 /* Invalid */;
+            return Swipe.Invalid;
 
         if (deltaX < 0)
-            swipe = 1 /* Left */;
-        else if (deltaX > 0)
-            swipe = 2 /* Right */;
+            swipe = Swipe.Left;
+else if (deltaX > 0)
+            swipe = Swipe.Right;
 
         deltaX = Math.abs(deltaX);
         if (deltaX == 0 || deltaY >= MAX_VERTICAL_DISTANCE || deltaX <= MIN_HORIZONTAL_DISTANCE || deltaY / deltaX >= MAX_VERTICAL_RATIO)
-            return 0 /* Invalid */;
+            return Swipe.Invalid;
 
         return swipe;
     }
@@ -142,14 +128,14 @@
 
     function moveEnd(ev, target, node, coords) {
         var swipe = analyzeSwipe(coords);
-        if (swipe == 0 /* Invalid */) {
+        if (swipe == Swipe.Invalid) {
             return false;
         }
 
         if (!node)
             return false;
 
-        var method = "onSwipe" + (swipe == 2 /* Right */ ? "Right" : "Left");
+        var method = "onSwipe" + (swipe == Swipe.Right ? "Right" : "Left");
         var param = buildParam(ev);
         if (b.bubble(node, method, param)) {
             preventDefault(ev);

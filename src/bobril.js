@@ -1,15 +1,10 @@
-﻿/// <reference path="../src/bobril.d.ts"/>
-
-// ReSharper restore InconsistentNaming
-if (typeof DEBUG === 'undefined')
+﻿if (typeof DEBUG === 'undefined')
     DEBUG = true;
 
-// IE8 [].map polyfill Reference: http://es5.github.io/#x15.4.4.19
 if (!Array.prototype.map) {
     Array.prototype.map = function (callback, thisArg) {
         var t, a, k;
 
-        // ReSharper disable once ConditionIsAlwaysConst
         if (DEBUG && this == null) {
             throw new TypeError("this==null");
         }
@@ -36,13 +31,12 @@ if (!Array.prototype.map) {
     };
 }
 
-// Object create polyfill
 if (!Object.create) {
     Object.create = function (o) {
         function f() {
         }
         f.prototype = o;
-        return new f();
+        return new (f)();
     };
 }
 
@@ -99,24 +93,24 @@ b = (function (window, document, undefined) {
                 } else if (inNamespace) {
                     if (attrName === "href")
                         el.setAttributeNS("http://www.w3.org/1999/xlink", "href", newAttr);
-                    else if (attrName === "className")
+else if (attrName === "className")
                         el.setAttribute("class", newAttr);
-                    else
+else
                         el.setAttribute(attrName, newAttr);
                 } else if (attrName === "value" && attrName in el) {
-                    var currentValue = (el[attrName]);
+                    var currentValue = ((el)[attrName]);
                     if (oldAttr === undefined) {
-                        n.ctx["b$value"] = newAttr;
+                        (n.ctx)["b$value"] = newAttr;
                     }
                     if (newAttr !== currentValue) {
                         if (oldAttr === undefined || currentValue === oldAttr) {
-                            el[attrName] = newAttr;
+                            (el)[attrName] = newAttr;
                         } else {
                             emitEvent("input", null, el, n);
                         }
                     }
                 } else if (attrName in el && !(attrName === "list" || attrName === "form")) {
-                    el[attrName] = newAttr;
+                    (el)[attrName] = newAttr;
                 } else
                     el.setAttribute(attrName, newAttr);
             }
@@ -282,7 +276,7 @@ b = (function (window, document, undefined) {
     }
 
     function getCacheNode(n) {
-        return n[nodeBackpointer];
+        return (n)[nodeBackpointer];
     }
 
     function updateNode(n, c) {
@@ -293,7 +287,7 @@ b = (function (window, document, undefined) {
             if (component.shouldChange)
                 if (!component.shouldChange(c.ctx, n, c))
                     return c;
-            c.ctx.data = n.data || {};
+            (c.ctx).data = n.data || {};
             c.component = component;
             if (component.init)
                 component.init(c.ctx, n, c);
@@ -321,7 +315,7 @@ b = (function (window, document, undefined) {
                 newElements.push(elprev);
                 elprev = elprev.nextSibling;
             }
-            n.element = newElements;
+            (n).element = newElements;
             if (removeEl) {
                 parent.removeChild(el);
             }
@@ -620,7 +614,6 @@ b = (function (window, document, undefined) {
             newIndex++;
         }
 
-        // Without any keyless nodes we are done
         if (!keyLess)
             return cachedChildren;
 
@@ -710,7 +703,7 @@ b = (function (window, document, undefined) {
     }
 
     var now = Date.now || (function () {
-        return (new Date).getTime();
+        return (new Date()).getTime();
     });
     var startTime = now();
     var lastTickTime = 0;
@@ -817,7 +810,7 @@ b = (function (window, document, undefined) {
         while (node) {
             var c = node.component;
             if (c) {
-                var m = c[name];
+                var m = (c)[name];
                 if (m) {
                     if (m.call(c, node.ctx, param))
                         return true;
@@ -849,7 +842,7 @@ b = (function (window, document, undefined) {
         var res;
         if (id) {
             id = "b$a" + id;
-            res = comp[id];
+            res = (comp)[id];
             if (res) {
                 node.component = res;
                 return node;
@@ -859,7 +852,7 @@ b = (function (window, document, undefined) {
         for (var i in methods) {
             if (methods.hasOwnProperty(i) && i !== "id") {
                 var m = methods[i];
-                var origM = comp[i];
+                var origM = (comp)[i];
                 if (typeof (m) == "function" && origM) {
                     res[i] = merge(origM, m);
                 } else {
@@ -868,7 +861,7 @@ b = (function (window, document, undefined) {
             }
         }
         if (id) {
-            comp[id] = res;
+            (comp)[id] = res;
         }
         node.component = res;
         return node;
@@ -878,8 +871,8 @@ b = (function (window, document, undefined) {
         var pd = event.preventDefault;
         if (pd)
             pd.call(event);
-        else
-            event.returnValue = false;
+else
+            (event).returnValue = false;
     }
 
     return {

@@ -7,7 +7,7 @@ var TestComponent = (function () {
     TestComponent.prototype.init = function (ctx, me, oldMe) {
         if (oldMe)
             this.actions += "u:" + me.data.name + ";";
-        else
+else
             this.actions += "i:" + me.data.name + ";";
     };
 
@@ -41,9 +41,13 @@ describe("livecycle", function () {
     it("createNodeCallsInitInRightOrder", function () {
         var c = new TestComponent();
         b.createNode({
-            tag: "div", component: c, data: { name: "1" },
+            tag: "div",
+            component: c,
+            data: { name: "1" },
             children: {
-                tag: "div", component: c, data: { name: "2" }
+                tag: "div",
+                component: c,
+                data: { name: "2" }
             }
         });
         b.callPostCallbacks();
@@ -73,17 +77,25 @@ describe("livecycle", function () {
     it("updateNodeCallsUpdateInRightOrder", function () {
         var c = new TestComponent();
         var r = b.createNode({
-            tag: "div", component: c, data: { name: "1" },
+            tag: "div",
+            component: c,
+            data: { name: "1" },
             children: {
-                tag: "div", component: c, data: { name: "2" }
+                tag: "div",
+                component: c,
+                data: { name: "2" }
             }
         });
         b.callPostCallbacks();
         c.actions = "";
         b.updateNode({
-            tag: "div", component: c, data: { name: "1", change: true },
+            tag: "div",
+            component: c,
+            data: { name: "1", change: true },
             children: {
-                tag: "div", component: c, data: { name: "2", change: true }
+                tag: "div",
+                component: c,
+                data: { name: "2", change: true }
             }
         }, r);
         b.callPostCallbacks();
@@ -93,17 +105,25 @@ describe("livecycle", function () {
     it("destroyCalledInCaseOfBigChange", function () {
         var c = new TestComponent();
         var r = b.createNode({
-            tag: "div", component: c, data: { name: "1" },
+            tag: "div",
+            component: c,
+            data: { name: "1" },
             children: {
-                tag: "div", component: c, data: { name: "2" }
+                tag: "div",
+                component: c,
+                data: { name: "2" }
             }
         });
         b.callPostCallbacks();
         c.actions = "";
         b.updateNode({
-            tag: "h1", component: c, data: { name: "3", change: true },
+            tag: "h1",
+            component: c,
+            data: { name: "3", change: true },
             children: {
-                tag: "div", component: c, data: { name: "4", change: true }
+                tag: "div",
+                component: c,
+                data: { name: "4", change: true }
             }
         }, r);
         b.callPostCallbacks();

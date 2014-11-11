@@ -24,15 +24,15 @@ var GameApp;
         Player.prototype.tick = function () {
             if (this.left == this.right)
                 this.ax = 0;
-            else if (this.left)
+else if (this.left)
                 this.ax = -1;
-            else
+else
                 this.ax = 1;
             if (this.up == this.down)
                 this.ay = 0;
-            else if (this.up)
+else if (this.up)
                 this.ay = -1;
-            else
+else
                 this.ay = 1;
 
             if (this.ax < this.vx) {
@@ -178,7 +178,10 @@ var GameApp;
         return [
             h("h1", "Game"),
             {
-                tag: "div", attrs: { tabindex: "0", style: { width: boardX + "px", height: boardY + "px", outline: "0" } }, component: GameControler, children: [
+                tag: "div",
+                attrs: { tabindex: "0", style: { width: boardX + "px", height: boardY + "px", outline: "0" } },
+                component: GameControler,
+                children: [
                     {
                         component: b.vg,
                         data: { width: boardX + "px", height: boardY + "px" },

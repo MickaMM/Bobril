@@ -52,10 +52,6 @@
         var x = touches[0].clientX;
         var y = touches[0].clientY;
 
-        // Work around desktop Webkit quirk where clicking a label will fire two clicks (on the label
-        // and on the input element). Depending on the exact browser, this second click we don't want
-        // to bust has either (0,0), negative coordinates, or coordinates equal to triggering label
-        // click event
         if (x < 1 && y < 1) {
             return false;
         }
@@ -63,19 +59,14 @@
             return false;
         }
 
-        // reset label click coordinates on first subsequent click
         if (lastLabelClickCoordinates) {
             lastLabelClickCoordinates = null;
         }
 
-        // remember label click coordinates to prevent click busting of trigger click event on input
-        if (event.target.tagName.toLowerCase() === 'label') {
+        if ((event.target).tagName.toLowerCase() === 'label') {
             lastLabelClickCoordinates = [x, y];
         }
 
-        // Look for an allowable region containing this click.
-        // If we find one, that means it was created by touchstart and not removed by
-        // preventGhostClick, so we don't bust it.
         if (checkAllowableRegions(touchCoordinates, x, y)) {
             return false;
         }
@@ -84,7 +75,7 @@
         preventDefault(event);
 
         // Blur focused form elements
-        event.target && event.target.blur();
+        event.target && (event.target).blur();
         return true;
     }
 
@@ -129,7 +120,6 @@
         tapping = true;
         tapElement = target;
 
-        // Hack for Safari, which can target text nodes instead of containers.
         if (tapElement.nodeType == 3) {
             tapElement = tapElement.parentNode;
         }
@@ -160,11 +150,8 @@
             // Call preventGhostClick so the clickbuster will catch the corresponding click.
             preventGhostClickAndAllowBusting(x, y);
 
-            // Blur the focused element (the button, probably) before firing the callback.
-            // This doesn't work perfectly on Android Chrome, but seems to work elsewhere.
-            // I couldn't get anything to work reliably on Android Chrome.
             if (tapElement) {
-                tapElement.blur();
+                (tapElement).blur();
             }
 
             var disabled = node.attrs && node.attrs["disabled"];
@@ -228,7 +215,7 @@
             var param = buildParam(ev);
             var c = node.component;
             if (c) {
-                var m = c[handlerName];
+                var m = (c)[handlerName];
                 if (m) {
                     m.call(c, node.ctx, param);
                 }
@@ -242,7 +229,7 @@
     addEvent("click", 1, clickBuster);
     addEvent("touchstart", 1, touchStartBuster);
 
-    addEvent("mouseover", 300, createNoBubblingHandler("onMouseEnter")); // bubbling mouseover and out are same basically same as nonbubling mouseenter and leave
+    addEvent("mouseover", 300, createNoBubblingHandler("onMouseEnter"));
     addEvent("mouseout", 300, createNoBubblingHandler("onMouseLeave"));
 
     addEvent("click", 400, createHandler("onClick"));

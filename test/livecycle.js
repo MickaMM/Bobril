@@ -4,11 +4,22 @@ var TestComponent = (function () {
     function TestComponent() {
         this.actions = "";
     }
-    TestComponent.prototype.init = function (ctx, me, oldMe) {
+    TestComponent.prototype.init = function (ctx, me) {
+        this.actions += "i:" + me.data.name + ";";
+    };
+
+    TestComponent.prototype.render = function (ctx, me, oldMe) {
         if (oldMe)
-            this.actions += "u:" + me.data.name + ";";
+            this.actions += "ru:" + me.data.name + ";";
         else
-            this.actions += "i:" + me.data.name + ";";
+            this.actions += "ri:" + me.data.name + ";";
+    };
+
+    TestComponent.prototype.postInit = function (ctx, me, oldMe) {
+        if (oldMe)
+            this.actions += "U:" + me.data.name + ";";
+        else
+            this.actions += "I:" + me.data.name + ";";
     };
 
     TestComponent.prototype.shouldChange = function (ctx, me, oldMe) {
@@ -33,9 +44,9 @@ var TestComponent = (function () {
 describe("livecycle", function () {
     it("createNodeCallsInitAndPostInit", function () {
         var c = new TestComponent();
-        b.createNode({ tag: "div", component: c, data: { name: "1" } });
+        b.createNode({ tag: "div", component: c, data: { name: "1" } }, null);
         b.callPostCallbacks();
-        expect(c.actions).toBe("i:1;pi:1;");
+        expect(c.actions).toBe("i:1;ri:1;I:1;pi:1;");
     });
 
     it("createNodeCallsInitInRightOrder", function () {
@@ -45,24 +56,24 @@ describe("livecycle", function () {
             children: {
                 tag: "div", component: c, data: { name: "2" }
             }
-        });
+        }, null);
         b.callPostCallbacks();
-        expect(c.actions).toBe("i:1;i:2;pi:2;pi:1;");
+        expect(c.actions).toBe("i:1;ri:1;i:2;ri:2;I:2;I:1;pi:2;pi:1;");
     });
 
     it("updateNodeCallsShouldUpdateAndPostUpdate", function () {
         var c = new TestComponent();
-        var r = b.createNode({ tag: "div", component: c, data: { name: "1" } });
+        var r = b.createNode({ tag: "div", component: c, data: { name: "1" } }, null);
         b.callPostCallbacks();
         c.actions = "";
         b.updateNode({ tag: "div", component: c, data: { name: "1", change: true } }, r);
         b.callPostCallbacks();
-        expect(c.actions).toBe("sc:1;u:1;pu:1;");
+        expect(c.actions).toBe("sc:1;ru:1;U:1;pu:1;");
     });
 
     it("shouldUpdateReturningFalseDoesNotPostUpdate", function () {
         var c = new TestComponent();
-        var r = b.createNode({ tag: "div", component: c, data: { name: "1" } });
+        var r = b.createNode({ tag: "div", component: c, data: { name: "1" } }, null);
         b.callPostCallbacks();
         c.actions = "";
         b.updateNode({ tag: "div", component: c, data: { name: "1", change: false } }, r);
@@ -77,7 +88,7 @@ describe("livecycle", function () {
             children: {
                 tag: "div", component: c, data: { name: "2" }
             }
-        });
+        }, null);
         b.callPostCallbacks();
         c.actions = "";
         b.updateNode({
@@ -87,7 +98,7 @@ describe("livecycle", function () {
             }
         }, r);
         b.callPostCallbacks();
-        expect(c.actions).toBe("sc:1;u:1;sc:2;u:2;pu:2;pu:1;");
+        expect(c.actions).toBe("sc:1;ru:1;sc:2;ru:2;U:2;U:1;pu:2;pu:1;");
     });
 
     it("destroyCalledInCaseOfBigChange", function () {
@@ -97,7 +108,7 @@ describe("livecycle", function () {
             children: {
                 tag: "div", component: c, data: { name: "2" }
             }
-        });
+        }, null);
         b.callPostCallbacks();
         c.actions = "";
         b.updateNode({
@@ -107,23 +118,28 @@ describe("livecycle", function () {
             }
         }, r);
         b.callPostCallbacks();
-        expect(c.actions).toBe("sc:3;u:3;i:3;i:4;d:2;d:1;pi:4;pi:3;");
+        expect(c.actions).toBe("sc:3;ru:3;i:3;ri:3;i:4;ri:4;I:4;I:3;d:2;d:1;pi:4;pi:3;");
     });
 
-    it("initCallsFactory", function (done) {
+    it("initCallsFactory", function () {
+        var done = false;
         var c = new TestComponent();
         b.init(function () {
             setTimeout(function () {
-                expect(c.actions).toBe("i:1;pi:1;");
-                done();
+                expect(c.actions).toBe("i:1;ri:1;I:1;pi:1;");
+                done = true;
             }, 0);
             return { tag: "div", component: c, data: { name: "1" } };
         });
+        waitsFor(function () {
+            return done;
+        });
     });
 
-    it("invalidateInsideFactoryWorks", function (done) {
+    it("invalidateInsideFactoryWorks", function () {
         var c = new TestComponent();
         var state = 0;
+        var done = false;
         b.init(function () {
             state++;
             if (state === 1) {
@@ -131,13 +147,43 @@ describe("livecycle", function () {
                 return [{ tag: "div", component: c, data: { name: "1" } }];
             } else {
                 setTimeout(function () {
-                    expect(c.actions).toBe("i:1;pi:1;d:1;");
-                    done();
+                    expect(c.actions).toBe("i:1;ri:1;I:1;pi:1;d:1;");
+                    done = true;
                 }, 0);
                 return [];
             }
         });
+        waitsFor(function () {
+            return done;
+        });
     });
+
+    it("canFindDomInVdom"), function () {
+        var done = false;
+        var uid = 0;
+        function d() {
+            var params = [];
+            for (var _i = 0; _i < (arguments.length - 0); _i++) {
+                params[_i] = arguments[_i + 0];
+            }
+            return { tag: "div", attrs: { id: "bobriltest" + (uid++) }, children: params };
+        }
+
+        b.init(function () {
+            setTimeout(function () {
+                for (var i = 0; i < uid; i++) {
+                    var nn = document.getElementById("bobriltest" + i);
+                    var vnn = b.deref(nn);
+                    expect(vnn.attrs.id).toBe(nn.id);
+                }
+                done = true;
+            }, 0);
+            return [d(d(), d(), d(d(), d())), d(), d(d(d(d())))];
+        });
+        waitsFor(function () {
+            return done;
+        });
+    };
 
     it("uptimeAndNowCouldBeCalled", function () {
         b.uptime();

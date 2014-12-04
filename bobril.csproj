@@ -61,9 +61,15 @@
     <Content Include="examples\game\index.html" />
     <Content Include="examples\index.html" />
     <Content Include="examples\input\index.html" />
+    <Content Include="examples\media\index.html" />
     <Content Include="examples\mouseenter\index.html" />
     <Content Include="examples\mouse\index.html" />
     <Content Include="examples\onkey\index.html" />
+    <Content Include="examples\router2\index.html" />
+    <Content Include="examples\router\index.html" />
+    <Content Include="examples\todo\delete.png" />
+    <Content Include="examples\todo\index.html" />
+    <Content Include="examples\todo\styles.css" />
     <Content Include="examples\vg\index.html" />
   </ItemGroup>
   <ItemGroup />
@@ -71,15 +77,25 @@
     <TypeScriptCompile Include="examples\basic\app.ts" />
     <TypeScriptCompile Include="examples\game\app.ts" />
     <TypeScriptCompile Include="examples\input\app.ts" />
+    <TypeScriptCompile Include="examples\media\app.ts" />
     <TypeScriptCompile Include="examples\mouseenter\app.ts" />
     <TypeScriptCompile Include="examples\mouse\app.ts" />
     <TypeScriptCompile Include="examples\onkey\app.ts" />
+    <TypeScriptCompile Include="examples\router2\app.ts" />
+    <TypeScriptCompile Include="examples\router\app.ts" />
+    <TypeScriptCompile Include="examples\todo\app.ts" />
+    <TypeScriptCompile Include="examples\todo\components.ts" />
+    <TypeScriptCompile Include="examples\todo\model.ts" />
     <TypeScriptCompile Include="examples\vg\app.ts" />
     <TypeScriptCompile Include="src\bobril.d.ts" />
+    <TypeScriptCompile Include="src\bobril.media.d.ts" />
+    <TypeScriptCompile Include="src\bobril.media.ts" />
     <TypeScriptCompile Include="src\bobril.mouse.d.ts" />
     <TypeScriptCompile Include="src\bobril.mouse.ts" />
     <TypeScriptCompile Include="src\bobril.onchange.d.ts" />
     <TypeScriptCompile Include="src\bobril.onchange.ts" />
+    <TypeScriptCompile Include="src\bobril.router.d.ts" />
+    <TypeScriptCompile Include="src\bobril.router.ts" />
     <TypeScriptCompile Include="src\bobril.swipe.d.ts" />
     <TypeScriptCompile Include="src\bobril.swipe.ts" />
     <TypeScriptCompile Include="src\bobril.onkey.d.ts" />
@@ -88,6 +104,7 @@
     <TypeScriptCompile Include="src\bobril.vg.d.ts" />
     <TypeScriptCompile Include="src\bobril.vg.ts" />
     <TypeScriptCompile Include="src\lib.touch.d.ts" />
+    <TypeScriptCompile Include="test\helpers.ts" />
     <TypeScriptCompile Include="test\jasmine.d.ts" />
     <TypeScriptCompile Include="test\livecycle.ts" />
     <TypeScriptCompile Include="test\sandbox.ts" />

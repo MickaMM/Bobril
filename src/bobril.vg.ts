@@ -132,8 +132,7 @@
     }
 
     var svgComponent = {
-        id: "b$vgr",
-        init: svgComponentInit
+        render: svgComponentInit
     }
 
     function svgChildComponentInit(ctx: Object, me: IBobrilNode) {
@@ -183,8 +182,7 @@
     }
 
     var svgChildComponent = {
-        id: "b$vgc",
-        init: svgChildComponentInit
+        render: svgChildComponentInit
     }
 
     function vmlComponentInit(ctx: Object, me: IBobrilNode) {
@@ -195,8 +193,7 @@
     }
 
     var vmlComponent = {
-        id: "b$vgr",
-        init: vmlComponentInit
+        render: vmlComponentInit
     }
 
     function vmlChildComponentInit(ctx: Object, me: IBobrilNode) {
@@ -257,8 +254,7 @@
     }
 
     var vmlChildComponent = {
-        id: "b$vgc",
-        init: vmlChildComponentInit
+        render: vmlChildComponentInit
     }
 
     var defaultvml = "#default#VML";

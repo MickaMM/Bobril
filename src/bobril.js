@@ -7,7 +7,7 @@ if (typeof DEBUG === 'undefined')
 // IE8 [].map polyfill Reference: http://es5.github.io/#x15.4.4.19
 if (!Array.prototype.map) {
     Array.prototype.map = function (callback, thisArg) {
-        var t, a, k;
+        var a, k;
 
         // ReSharper disable once ConditionIsAlwaysConst
         if (DEBUG && this == null) {
@@ -18,16 +18,13 @@ if (!Array.prototype.map) {
         if (DEBUG && typeof callback != "function") {
             throw new TypeError(callback + " isn't func");
         }
-        if (arguments.length > 1) {
-            t = thisArg;
-        }
         a = new Array(len);
         k = 0;
         while (k < len) {
             var kValue, mappedValue;
             if (k in o) {
                 kValue = o[k];
-                mappedValue = callback.call(t, kValue, k, o);
+                mappedValue = callback.call(thisArg, kValue, k, o);
                 a[k] = mappedValue;
             }
             k++;
@@ -46,8 +43,7 @@ if (!Object.create) {
     };
 }
 
-b = (function (window, document, undefined) {
-    var nodeBackpointer = "data-bobril";
+b = (function (window, document) {
     function assert(shoudBeTrue, messageIfFalse) {
         if (DEBUG && !shoudBeTrue)
             throw Error(messageIfFalse || "assertion failed");
@@ -66,35 +62,69 @@ b = (function (window, document, undefined) {
         }
         return keys;
     });
+
+    function createTextNode(content) {
+        return document.createTextNode(content);
+    }
+
+    var hasTextContent = "textContent" in createTextNode("");
+
+    function isObject(value) {
+        return typeof value === "object";
+    }
+
     var inNamespace = false;
     var inSvg = false;
     var updateCall = [];
     var updateInstance = [];
+    var setValueCallback = function (el, node, newValue, oldValue) {
+        if (newValue !== oldValue)
+            el["value"] = newValue;
+    };
+
+    function setSetValue(callback) {
+        var prev = setValueCallback;
+        setValueCallback = callback;
+        return prev;
+    }
 
     function updateElement(n, el, newAttrs, oldAttrs) {
         if (!newAttrs)
             return undefined;
-        for (var attrName in newAttrs) {
-            var newAttr = newAttrs[attrName];
-            var oldAttr = oldAttrs[attrName];
-            if ((oldAttr === undefined) || (oldAttr !== newAttr)) {
+        var attrName, newAttr, oldAttr, valueOldAttr, valueNewAttr;
+        for (attrName in newAttrs) {
+            newAttr = newAttrs[attrName];
+            oldAttr = oldAttrs[attrName];
+            if (attrName === "value" && !inNamespace) {
+                valueOldAttr = oldAttr;
+                valueNewAttr = newAttr;
+                oldAttrs[attrName] = newAttr;
+                continue;
+            }
+            if (oldAttr !== newAttr) {
                 oldAttrs[attrName] = newAttr;
                 if (attrName === "style") {
-                    var rule;
-                    if (oldAttr) {
-                        for (rule in newAttr) {
-                            var v = newAttr[rule];
-                            if (oldAttr[rule] !== v)
-                                el.style[rule] = v;
-                        }
-                        for (rule in oldAttr) {
-                            if (!(rule in newAttr))
-                                el.style[rule] = "";
+                    if (isObject(newAttr)) {
+                        var rule;
+                        if (isObject(oldAttr)) {
+                            for (rule in newAttr) {
+                                var v = newAttr[rule];
+                                if (oldAttr[rule] !== v)
+                                    el.style[rule] = v;
+                            }
+                            for (rule in oldAttr) {
+                                if (!(rule in newAttr))
+                                    el.style[rule] = "";
+                            }
+                        } else {
+                            if (oldAttr)
+                                el.style.cssText = "";
+                            for (rule in newAttr) {
+                                el.style[rule] = newAttr[rule];
+                            }
                         }
                     } else {
-                        for (rule in newAttr) {
-                            el.style[rule] = newAttr[rule];
-                        }
+                        el.style.cssText = newAttr;
                     }
                 } else if (inNamespace) {
                     if (attrName === "href")
@@ -103,28 +133,22 @@ b = (function (window, document, undefined) {
                         el.setAttribute("class", newAttr);
                     else
                         el.setAttribute(attrName, newAttr);
-                } else if (attrName === "value" && attrName in el) {
-                    var currentValue = (el[attrName]);
-                    if (oldAttr === undefined) {
-                        n.ctx["b$value"] = newAttr;
-                    }
-                    if (newAttr !== currentValue) {
-                        if (oldAttr === undefined || currentValue === oldAttr) {
-                            el[attrName] = newAttr;
-                        } else {
-                            emitEvent("input", null, el, n);
-                        }
-                    }
+                } else if (attrName === "value") {
+                    valueOldAttr = oldAttr;
+                    valueNewAttr = newAttr;
                 } else if (attrName in el && !(attrName === "list" || attrName === "form")) {
                     el[attrName] = newAttr;
                 } else
                     el.setAttribute(attrName, newAttr);
             }
         }
+        if (valueNewAttr !== undefined) {
+            setValueCallback(el, n, valueNewAttr, valueOldAttr);
+        }
         return oldAttrs;
     }
 
-    function createNode(n) {
+    function createNode(n, parentNode) {
         var c = n;
         var backupInNamespace = inNamespace;
         var backupInSvg = inSvg;
@@ -134,9 +158,12 @@ b = (function (window, document, undefined) {
             if (component.init) {
                 component.init(c.ctx, n);
             }
+            if (component.render) {
+                component.render(c.ctx, n);
+            }
         }
         if (n.tag === "") {
-            c.element = document.createTextNode(c.content);
+            c.element = createTextNode(c.children);
             return c;
         } else if (n.tag === "/") {
             return c;
@@ -148,17 +175,23 @@ b = (function (window, document, undefined) {
             c.element = document.createElement(n.tag);
         }
         createChildren(c);
+        if (component) {
+            if (component.postInit) {
+                component.postInit(c.ctx, n);
+            }
+        }
         c.attrs = updateElement(c, c.element, c.attrs, {});
         inNamespace = backupInNamespace;
         inSvg = backupInSvg;
-        pushInitCallback(c);
+        pushInitCallback(c, false);
+        c.parent = parentNode;
         return c;
     }
 
     function normalizeNode(n) {
         var t = typeof n;
         if (t === "string") {
-            return { tag: "", content: n };
+            return { tag: "", children: n };
         }
         if (t === "boolean")
             return null;
@@ -173,10 +206,10 @@ b = (function (window, document, undefined) {
         if (!isArray(ch)) {
             var type = typeof ch;
             if (type === "string") {
-                if ('textContent' in element) {
+                if (hasTextContent) {
                     element.textContent = ch;
                 } else {
-                    element.appendChild(document.createTextNode(ch));
+                    element.innerText = ch;
                 }
                 return;
             }
@@ -196,10 +229,10 @@ b = (function (window, document, undefined) {
                 l--;
                 continue;
             }
-            var j = ch[i] = createNode(item);
+            var j = ch[i] = createNode(item, c);
             if (j.tag === "/") {
                 var before = element.lastChild;
-                c.element.insertAdjacentHTML("beforeend", j.content);
+                c.element.insertAdjacentHTML("beforeend", j.children);
                 j.element = [];
                 if (before) {
                     before = before.nextSibling;
@@ -207,7 +240,6 @@ b = (function (window, document, undefined) {
                     before = element.firstChild;
                 }
                 while (before) {
-                    before[nodeBackpointer] = j;
                     j.element.push(before);
                     before = before.nextSibling;
                 }
@@ -231,21 +263,12 @@ b = (function (window, document, undefined) {
             if (component.destroy)
                 component.destroy(c.ctx, c, c.element);
         }
-        if (c.tag !== "") {
-            var el = c.element;
-            if (isArray(el)) {
-                for (var j = 0; j < el.length; j++) {
-                    el[j][nodeBackpointer] = null;
-                }
-            } else {
-                el[nodeBackpointer] = null;
-            }
-        }
     }
 
     function removeNode(c) {
         destroyNode(c);
         var el = c.element;
+        c.parent = null;
         if (isArray(el)) {
             var pa = el[0].parentNode;
             if (pa) {
@@ -260,29 +283,46 @@ b = (function (window, document, undefined) {
         }
     }
 
-    function pushInitCallback(c) {
-        c.element[nodeBackpointer] = c;
+    function pushInitCallback(c, aupdate) {
         var cc = c.component;
         if (cc) {
             if (cc.postInitDom) {
-                updateCall.push(false);
+                updateCall.push(aupdate);
                 updateInstance.push(c);
             }
         }
     }
 
-    function pushUpdateCallback(c) {
-        var cc = c.component;
-        if (cc) {
-            if (cc.postUpdateDom) {
-                updateCall.push(true);
-                updateInstance.push(c);
-            }
-        }
-    }
+    var rootFactory;
+    var rootCacheChildren = [];
 
     function getCacheNode(n) {
-        return n[nodeBackpointer];
+        if (n == null)
+            return null;
+        var root = document.body;
+        var nodeStack = [];
+        while (n && n !== root) {
+            nodeStack.push(n);
+            n = n.parentNode;
+        }
+        if (!n)
+            return null;
+        var currentCacheArray = rootCacheChildren;
+        while (nodeStack.length) {
+            var currentNode = nodeStack.pop();
+            for (var i = 0, l = currentCacheArray.length; i < l; i++) {
+                if (currentCacheArray[i].element === currentNode) {
+                    if (nodeStack.length === 0)
+                        return currentCacheArray[i];
+                    currentCacheArray = currentCacheArray[i].children;
+                    currentNode = null;
+                    break;
+                }
+            }
+            if (currentNode)
+                return null;
+        }
+        return null;
     }
 
     function updateNode(n, c) {
@@ -295,11 +335,12 @@ b = (function (window, document, undefined) {
                     return c;
             c.ctx.data = n.data || {};
             c.component = component;
-            if (component.init)
-                component.init(c.ctx, n, c);
+            if (component.render)
+                component.render(c.ctx, n, c);
         }
+        var el;
         if (n.tag === "/") {
-            var el = c.element;
+            el = c.element;
             if (isArray(el))
                 el = el[0];
             var elprev = el.previousSibling;
@@ -309,7 +350,7 @@ b = (function (window, document, undefined) {
                 el = parent.insertBefore(document.createElement("i"), el);
                 removeEl = true;
             }
-            el.insertAdjacentHTML("beforebegin", n.content);
+            el.insertAdjacentHTML("beforebegin", n.children);
             if (elprev) {
                 elprev = elprev.nextSibling;
             } else {
@@ -317,7 +358,6 @@ b = (function (window, document, undefined) {
             }
             var newElements = [];
             while (elprev !== el) {
-                elprev[nodeBackpointer] = n;
                 newElements.push(elprev);
                 elprev = elprev.nextSibling;
             }
@@ -330,14 +370,16 @@ b = (function (window, document, undefined) {
         }
         if (n.tag === c.tag && (inSvg || !inNamespace)) {
             if (n.tag === "") {
-                if (c.content !== n.content) {
-                    c.content = n.content;
-                    if ('textContent' in c.element) {
-                        c.element.textContent = c.content;
-                        return c;
+                if (c.children !== n.children) {
+                    c.children = n.children;
+                    el = c.element;
+                    if (hasTextContent) {
+                        el.textContent = c.children;
+                    } else {
+                        el.nodeValue = c.children;
                     }
-                } else
-                    return c;
+                }
+                return c;
             } else {
                 if (n.tag === "svg") {
                     inNamespace = true;
@@ -345,18 +387,23 @@ b = (function (window, document, undefined) {
                 }
                 if (!n.attrs && !c.attrs || n.attrs && c.attrs && objectKeys(n.attrs).join() === objectKeys(c.attrs).join() && n.attrs.id === c.attrs.id) {
                     updateChildrenNode(n, c);
+                    if (component) {
+                        if (component.postInit) {
+                            component.postInit(c.ctx, n, c);
+                        }
+                    }
                     if (c.attrs)
                         c.attrs = updateElement(c, c.element, n.attrs, c.attrs);
                     inNamespace = backupInNamespace;
                     inSvg = backupInSvg;
-                    pushUpdateCallback(c);
+                    pushInitCallback(c, true);
                     return c;
                 }
                 inSvg = backupInSvg;
                 inNamespace = backupInNamespace;
             }
         }
-        var r = createNode(n);
+        var r = createNode(n, c.parent);
         var pn = c.element.parentNode;
         if (pn) {
             pn.insertBefore(r.element, c.element);
@@ -381,10 +428,10 @@ b = (function (window, document, undefined) {
     }
 
     function updateChildrenNode(n, c) {
-        c.children = updateChildren(c.element, n.children, c.children);
+        c.children = updateChildren(c.element, n.children, c.children, c);
     }
 
-    function updateChildren(element, newChildren, cachedChildren) {
+    function updateChildren(element, newChildren, cachedChildren, parentNode) {
         if (newChildren == null)
             newChildren = [];
         if (!isArray(newChildren)) {
@@ -392,11 +439,10 @@ b = (function (window, document, undefined) {
             if ((type === "string") && !isArray(cachedChildren)) {
                 if (newChildren === cachedChildren)
                     return cachedChildren;
-                if ('textContent' in element) {
+                if (hasTextContent) {
                     element.textContent = newChildren;
                 } else {
-                    element.innerHTML = "";
-                    element.appendChild(document.createTextNode(newChildren));
+                    element.innerText = newChildren;
                 }
                 return newChildren;
             }
@@ -474,7 +520,7 @@ b = (function (window, document, undefined) {
             }
 
             while (newIndex < newEnd) {
-                cachedChildren.splice(cachedIndex, 0, createNode(newChildren[newIndex]));
+                cachedChildren.splice(cachedIndex, 0, createNode(newChildren[newIndex], parentNode));
                 cachedIndex++;
                 cachedEnd++;
                 cachedLength++;
@@ -553,7 +599,7 @@ b = (function (window, document, undefined) {
             var akpos = cachedKeys[key];
             if (akpos === undefined) {
                 // New key
-                cachedChildren.splice(cachedIndex, 0, createNode(newChildren[newIndex]));
+                cachedChildren.splice(cachedIndex, 0, createNode(newChildren[newIndex], parentNode));
                 element.insertBefore(cachedChildren[cachedIndex].element, cachedChildren[cachedIndex + 1].element);
                 delta++;
                 newIndex++;
@@ -610,7 +656,7 @@ b = (function (window, document, undefined) {
         while (newIndex < newEnd) {
             key = newChildren[newIndex].key;
             if (key != null) {
-                cachedChildren.splice(cachedIndex, 0, createNode(newChildren[newIndex]));
+                cachedChildren.splice(cachedIndex, 0, createNode(newChildren[newIndex], parentNode));
                 cachedEnd++;
                 cachedLength++;
                 element.insertBefore(cachedChildren[cachedIndex].element, cachedEnd === cachedLength ? null : cachedChildren[cachedEnd].element);
@@ -684,7 +730,7 @@ b = (function (window, document, undefined) {
                 newIndex++;
                 cachedIndex++;
             } else {
-                cachedChildren.splice(newIndex, 0, createNode(newChildren[newIndex]));
+                cachedChildren.splice(newIndex, 0, createNode(newChildren[newIndex], parentNode));
                 cachedEnd++;
                 cachedLength++;
                 element.insertBefore(cachedChildren[newIndex].element, newIndex + 1 === cachedLength ? null : cachedChildren[newIndex + 1].element);
@@ -729,9 +775,6 @@ b = (function (window, document, undefined) {
         }
     }
 
-    var rootFactory;
-    var rootCacheChildren = [];
-
     var scheduled = false;
     function scheduleUpdate() {
         if (scheduled)
@@ -763,10 +806,12 @@ b = (function (window, document, undefined) {
     function addListener(el, name) {
         function enhanceEvent(ev) {
             ev = ev || window.event;
-            var t = ev.target || ev.srcElement;
+            var t = ev.target || ev.srcElement || el;
             var n = getCacheNode(t);
             emitEvent(name, ev, t, n);
         }
+        if (("on" + name) in window)
+            el = window;
         if (el.addEventListener) {
             el.addEventListener(name, enhanceEvent);
         } else {
@@ -798,6 +843,9 @@ b = (function (window, document, undefined) {
     }
 
     function init(factory) {
+        if (rootCacheChildren.length) {
+            rootCacheChildren = updateChildren(document.body, [], rootCacheChildren, null);
+        }
         rootFactory = factory;
         scheduleUpdate();
     }
@@ -809,7 +857,7 @@ b = (function (window, document, undefined) {
         uptime = time;
         scheduled = false;
         var newChildren = rootFactory();
-        rootCacheChildren = updateChildren(document.body, newChildren, rootCacheChildren);
+        rootCacheChildren = updateChildren(document.body, newChildren, rootCacheChildren, null);
         callPostCallbacks();
     }
 
@@ -823,8 +871,7 @@ b = (function (window, document, undefined) {
                         return true;
                 }
             }
-            var el = node.element.parentNode;
-            node = el ? getCacheNode(el) : null;
+            node = node.parent;
         }
         return false;
     }
@@ -839,27 +886,12 @@ b = (function (window, document, undefined) {
         };
     }
 
-    function postEnhance(node, methods) {
-        var comp = node.component;
-        if (!comp) {
-            node.component = methods;
-            return node;
-        }
-        var id = methods.id;
-        var res;
-        if (id) {
-            id = "b$a" + id;
-            res = comp[id];
-            if (res) {
-                node.component = res;
-                return node;
-            }
-        }
-        res = Object.create(comp);
-        for (var i in methods) {
-            if (methods.hasOwnProperty(i) && i !== "id") {
-                var m = methods[i];
-                var origM = comp[i];
+    function mergeComponents(c1, c2) {
+        var res = Object.create(c1);
+        for (var i in c2) {
+            if (c2.hasOwnProperty(i)) {
+                var m = c2[i];
+                var origM = c1[i];
                 if (typeof (m) == "function" && origM) {
                     res[i] = merge(origM, m);
                 } else {
@@ -867,11 +899,37 @@ b = (function (window, document, undefined) {
                 }
             }
         }
-        if (id) {
-            comp[id] = res;
+        return res;
+    }
+
+    function preEnhance(node, methods) {
+        var comp = node.component;
+        if (!comp) {
+            node.component = methods;
+            return node;
         }
-        node.component = res;
+        node.component = mergeComponents(methods, comp);
         return node;
+    }
+
+    function postEnhance(node, methods) {
+        var comp = node.component;
+        if (!comp) {
+            node.component = methods;
+            return node;
+        }
+        node.component = mergeComponents(comp, methods);
+        return node;
+    }
+
+    function assign(target, source) {
+        if (source != null)
+            for (var propname in source) {
+                if (!source.hasOwnProperty(propname))
+                    continue;
+                target[propname] = source[propname];
+            }
+        return target;
     }
 
     function preventDefault(event) {
@@ -887,12 +945,14 @@ b = (function (window, document, undefined) {
         updateNode: updateNode,
         updateChildren: updateChildren,
         callPostCallbacks: callPostCallbacks,
+        setSetValue: setSetValue,
         init: init,
         isArray: isArray,
         uptime: function () {
             return uptime;
         },
         now: now,
+        assign: assign,
         invalidate: scheduleUpdate,
         preventDefault: preventDefault,
         vmlNode: function () {
@@ -901,6 +961,7 @@ b = (function (window, document, undefined) {
         deref: getCacheNode,
         addEvent: addEvent,
         bubble: bubbleEvent,
+        preEnhance: preEnhance,
         postEnhance: postEnhance
     };
 })(window, document);

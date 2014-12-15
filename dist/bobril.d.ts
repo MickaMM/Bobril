@@ -21,17 +21,13 @@ interface IBobrilStatic {
     uptime(): number;
     // shim for Date.now()
     now(): number;
-    // returns IE version 8 - 11, for other browsers returns undefined
-    ieVersion(): number;
     // shalows copy all own members from source to target returns target, source could be null, target must be non-null 
     assign(target: Object, source: Object): Object;
     // shim for Event.preventDefault()
     preventDefault(event: Event): void;
     // this could be called only from component init and forces recreation of child nodes
     vmlNode(): void;
-    // DOM to vdom stack resolver
-    vdomPath(n: Node): IBobrilCacheNode[];
-    // DOM to vdom leaf resolver
+    // DOM to vdom resolver
     deref(n: Node): IBobrilCacheNode;
     // adds native event to window or body
     addEvent(name: string, priority: number, callback: (ev: Event, target: Node, node: IBobrilCacheNode) => boolean): void;
@@ -46,7 +42,7 @@ interface IBobrilAttributes {
     id?: string;
     href?: string;
     className?: string;
-    style?: any;
+    style?: Object;
     // boolean | string
     value?: any;
     [name: string]: any;
@@ -58,9 +54,9 @@ interface IBobrilComponent {
     // in case of update after shouldChange returns true, you can do any update/init tasks, ctx.data is updated to me.data and oldMe.component updated to me.component before calling this
     // in case of init this is called after init method, oldMe is equal to undefined in that case
     render? (ctx: Object, me: IBobrilNode, oldMe?: IBobrilCacheNode): void;
-    // called after all children are rendered, but before updating own attrs
+    // called after all children are initilized and postInitialized, but before updating own attrs
     // so this is useful for kind of layout in JS features
-    postRender? (ctx: Object, me: IBobrilNode, oldMe?: IBobrilCacheNode): void;
+    postInit? (ctx: Object, me: IBobrilNode, oldMe?: IBobrilCacheNode): void;
     // return false when whole subtree should not be changed from last time, you can still update any me members except key, default implementation always return true
     shouldChange? (ctx: Object, me: IBobrilNode, oldMe: IBobrilCacheNode): boolean;
     // called from children to parents order for new nodes

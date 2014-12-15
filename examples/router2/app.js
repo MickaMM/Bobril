@@ -1,14 +1,15 @@
-/// <reference path="../../src/bobril.d.ts"/>
+﻿/// <reference path="../../src/bobril.d.ts"/>
 /// <reference path="../../src/bobril.router.d.ts"/>
 var InputApp;
 (function (InputApp) {
     function h(tag) {
         var args = [];
-        for (var _i = 1; _i < arguments.length; _i++) {
-            args[_i - 1] = arguments[_i];
+        for (var _i = 0; _i < (arguments.length - 1); _i++) {
+            args[_i] = arguments[_i + 1];
         }
         return { tag: tag, children: args };
     }
+
     function a(node, prop, value) {
         var attrs = node.attrs;
         if (!attrs) {
@@ -18,11 +19,13 @@ var InputApp;
         attrs[prop] = value;
         return node;
     }
+
     var planetData = [
         { name: "Venus", image: "http://photojournal.jpl.nasa.gov/jpegMod/PIA00104_modest.jpg" },
         { name: "Earth", image: "http://solarsystem.nasa.gov/multimedia/gallery/VIIRS_4Jan2012_br.jpg" },
         { name: "Mars", image: "http://mars.jpl.nasa.gov/images/PIA02653-br2.jpg" }
     ];
+
     var About = (function () {
         function About() {
         }
@@ -37,6 +40,7 @@ var InputApp;
         };
         return About;
     })();
+
     var Empty = (function () {
         function Empty() {
         }
@@ -46,6 +50,7 @@ var InputApp;
         };
         return Empty;
     })();
+
     var NotFound = (function () {
         function NotFound() {
         }
@@ -55,6 +60,7 @@ var InputApp;
         };
         return NotFound;
     })();
+
     var SelectPlanet = (function () {
         function SelectPlanet() {
         }
@@ -64,6 +70,7 @@ var InputApp;
         };
         return SelectPlanet;
     })();
+
     var PlanetList = (function () {
         function PlanetList() {
         }
@@ -80,6 +87,7 @@ var InputApp;
         };
         return PlanetList;
     })();
+
     var PlanetImage = (function () {
         function PlanetImage() {
         }
@@ -87,23 +95,23 @@ var InputApp;
             var name = ctx.data.routeParams.name;
             var planet = null;
             for (var i = 0; i < planetData.length; i++) {
-                if (planetData[i].name === name)
+                if (planetData[i].name == name)
                     planet = planetData[i];
             }
             if (planet) {
                 me.tag = "img";
                 me.attrs = {
-                    style: { height: "auto", width: "20em" },
+                    style: { width: "20em" },
                     src: planet.image
                 };
-            }
-            else {
+            } else {
                 me.tag = "div";
                 me.children = h("p", "Don't have image of " + name);
             }
         };
         return PlanetImage;
     })();
+
     var App = (function () {
         function App() {
         }
@@ -117,6 +125,7 @@ var InputApp;
         };
         return App;
     })();
+
     b.routes(b.route({ handler: App }, [
         b.route({ name: "planets", data: { planets: planetData }, handler: PlanetList }, [
             b.route({ name: "planet", url: "/planet/:name", handler: PlanetImage }),

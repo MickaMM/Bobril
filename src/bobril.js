@@ -1,7 +1,7 @@
 ﻿/// <reference path="../src/bobril.d.ts"/>
 
 // ReSharper restore InconsistentNaming
-if (typeof DEBUG === "undefined")
+if (typeof DEBUG === 'undefined')
     DEBUG = true;
 
 // IE8 [].map polyfill Reference: http://es5.github.io/#x15.4.4.19
@@ -148,16 +148,6 @@ b = (function (window, document) {
         return oldAttrs;
     }
 
-    function pushInitCallback(c, aupdate) {
-        var cc = c.component;
-        if (cc) {
-            if (cc[aupdate ? "postUpdateDom" : "postInitDom"]) {
-                updateCall.push(aupdate);
-                updateInstance.push(c);
-            }
-        }
-    }
-
     function createNode(n, parentNode) {
         var c = n;
         var backupInNamespace = inNamespace;
@@ -186,8 +176,8 @@ b = (function (window, document) {
         }
         createChildren(c);
         if (component) {
-            if (component.postRender) {
-                component.postRender(c.ctx, n);
+            if (component.postInit) {
+                component.postInit(c.ctx, n);
             }
         }
         c.attrs = updateElement(c, c.element, c.attrs, {});
@@ -225,7 +215,6 @@ b = (function (window, document) {
             }
             ch = [ch];
         }
-        ch = ch.slice(0);
         var i = 0, l = ch.length;
         while (i < l) {
             var item = ch[i];
@@ -294,13 +283,22 @@ b = (function (window, document) {
         }
     }
 
+    function pushInitCallback(c, aupdate) {
+        var cc = c.component;
+        if (cc) {
+            if (cc.postInitDom) {
+                updateCall.push(aupdate);
+                updateInstance.push(c);
+            }
+        }
+    }
+
     var rootFactory;
     var rootCacheChildren = [];
 
-    function vdomPath(n) {
-        var res = [];
+    function getCacheNode(n) {
         if (n == null)
-            return res;
+            return null;
         var root = document.body;
         var nodeStack = [];
         while (n && n !== root) {
@@ -308,39 +306,30 @@ b = (function (window, document) {
             n = n.parentNode;
         }
         if (!n)
-            return res;
+            return null;
         var currentCacheArray = rootCacheChildren;
         while (nodeStack.length) {
             var currentNode = nodeStack.pop();
             for (var i = 0, l = currentCacheArray.length; i < l; i++) {
-                var bn = currentCacheArray[i];
-                if (bn.element === currentNode) {
-                    res.push(bn);
-                    currentCacheArray = bn.children;
+                if (currentCacheArray[i].element === currentNode) {
+                    if (nodeStack.length === 0)
+                        return currentCacheArray[i];
+                    currentCacheArray = currentCacheArray[i].children;
                     currentNode = null;
                     break;
                 }
             }
-            if (currentNode) {
-                res.push(null);
-                break;
-            }
+            if (currentNode)
+                return null;
         }
-        return res;
-    }
-
-    function getCacheNode(n) {
-        var s = vdomPath(n);
-        if (s.length == 0)
-            return null;
-        return s[s.length - 1];
+        return null;
     }
 
     function updateNode(n, c) {
         var component = n.component;
         var backupInNamespace = inNamespace;
         var backupInSvg = inSvg;
-        if (component && c.ctx != null) {
+        if (component) {
             if (component.shouldChange)
                 if (!component.shouldChange(c.ctx, n, c))
                     return c;
@@ -350,9 +339,7 @@ b = (function (window, document) {
                 component.render(c.ctx, n, c);
         }
         var el;
-        if (component && c.ctx == null) {
-            // old one was not even component => recreate
-        } else if (n.tag === "/") {
+        if (n.tag === "/") {
             el = c.element;
             if (isArray(el))
                 el = el[0];
@@ -380,7 +367,8 @@ b = (function (window, document) {
             }
             removeNode(c);
             return n;
-        } else if (n.tag === c.tag && (inSvg || !inNamespace)) {
+        }
+        if (n.tag === c.tag && (inSvg || !inNamespace)) {
             if (n.tag === "") {
                 if (c.children !== n.children) {
                     c.children = n.children;
@@ -400,8 +388,8 @@ b = (function (window, document) {
                 if (!n.attrs && !c.attrs || n.attrs && c.attrs && objectKeys(n.attrs).join() === objectKeys(c.attrs).join() && n.attrs.id === c.attrs.id) {
                     updateChildrenNode(n, c);
                     if (component) {
-                        if (component.postRender) {
-                            component.postRender(c.ctx, n, c);
+                        if (component.postInit) {
+                            component.postInit(c.ctx, n, c);
                         }
                     }
                     if (c.attrs)
@@ -427,7 +415,8 @@ b = (function (window, document) {
     function callPostCallbacks() {
         var count = updateInstance.length;
         for (var i = 0; i < count; i++) {
-            var n = updateInstance[i];
+            var n;
+            n = updateInstance[i];
             if (updateCall[i]) {
                 n.component.postUpdateDom(n.ctx, n, n.element);
             } else {
@@ -436,6 +425,10 @@ b = (function (window, document) {
         }
         updateCall = [];
         updateInstance = [];
+    }
+
+    function updateChildrenNode(n, c) {
+        c.children = updateChildren(c.element, n.children, c.children, c);
     }
 
     function updateChildren(element, newChildren, cachedChildren, parentNode) {
@@ -461,11 +454,9 @@ b = (function (window, document) {
             element.removeChild(element.firstChild);
             cachedChildren = [];
         }
-        newChildren = newChildren.slice(0);
         var newLength = newChildren.length;
         var cachedLength = cachedChildren.length;
-        var newIndex;
-        for (newIndex = 0; newIndex < newLength;) {
+        for (var newIndex = 0; newIndex < newLength;) {
             var item = newChildren[newIndex];
             if (isArray(item)) {
                 newChildren.splice.apply(newChildren, [newIndex, 1].concat(item));
@@ -475,7 +466,6 @@ b = (function (window, document) {
             item = normalizeNode(item);
             if (item == null) {
                 newChildren.splice(newIndex, 1);
-                newLength--;
                 continue;
             }
             newChildren[newIndex] = item;
@@ -484,7 +474,7 @@ b = (function (window, document) {
         var newEnd = newLength;
         var cachedEnd = cachedLength;
         newIndex = 0;
-        var cachedIndex = 0;
+        cachedIndex = 0;
         while (newIndex < newEnd && cachedIndex < cachedEnd) {
             if (newChildren[newIndex].key === cachedChildren[cachedIndex].key) {
                 cachedChildren[cachedIndex] = updateNode(newChildren[newIndex], cachedChildren[cachedIndex]);
@@ -549,6 +539,7 @@ b = (function (window, document) {
         }
 
         // order of keyed nodes ware changed => reorder keyed nodes first
+        var cachedIndex;
         var cachedKeys = {};
         var newKeys = {};
         var key;
@@ -755,10 +746,6 @@ b = (function (window, document) {
         return cachedChildren;
     }
 
-    function updateChildrenNode(n, c) {
-        c.children = updateChildren(c.element, n.children, c.children, c);
-    }
-
     var hasNativeRaf = false;
     var nativeRaf = window.requestAnimationFrame;
     if (nativeRaf) {
@@ -789,10 +776,17 @@ b = (function (window, document) {
     }
 
     var scheduled = false;
-    var uptime = 0;
+    function scheduleUpdate() {
+        if (scheduled)
+            return;
+        scheduled = true;
+        requestAnimationFrame(update);
+    }
 
-    var regEvents = {};
-    var registryEvents = {};
+    var regEvents;
+    var registryEvents;
+    regEvents = {};
+    registryEvents = {};
 
     function addEvent(name, priority, callback) {
         var list = registryEvents[name] || [];
@@ -826,7 +820,6 @@ b = (function (window, document) {
     }
 
     var eventsCaptured = false;
-
     function initEvents() {
         if (eventsCaptured)
             return;
@@ -849,6 +842,16 @@ b = (function (window, document) {
         }
     }
 
+    function init(factory) {
+        if (rootCacheChildren.length) {
+            rootCacheChildren = updateChildren(document.body, [], rootCacheChildren, null);
+        }
+        rootFactory = factory;
+        scheduleUpdate();
+    }
+
+    var uptime = 0;
+
     function update(time) {
         initEvents();
         uptime = time;
@@ -856,21 +859,6 @@ b = (function (window, document) {
         var newChildren = rootFactory();
         rootCacheChildren = updateChildren(document.body, newChildren, rootCacheChildren, null);
         callPostCallbacks();
-    }
-
-    function scheduleUpdate() {
-        if (scheduled)
-            return;
-        scheduled = true;
-        requestAnimationFrame(update);
-    }
-
-    function init(factory) {
-        if (rootCacheChildren.length) {
-            rootCacheChildren = updateChildren(document.body, [], rootCacheChildren, null);
-        }
-        rootFactory = factory;
-        scheduleUpdate();
     }
 
     function bubbleEvent(node, name, param) {
@@ -965,15 +953,11 @@ b = (function (window, document) {
         },
         now: now,
         assign: assign,
-        ieVersion: function () {
-            return document.documentMode;
-        },
         invalidate: scheduleUpdate,
         preventDefault: preventDefault,
         vmlNode: function () {
             return inNamespace = true;
         },
-        vdomPath: vdomPath,
         deref: getCacheNode,
         addEvent: addEvent,
         bubble: bubbleEvent,

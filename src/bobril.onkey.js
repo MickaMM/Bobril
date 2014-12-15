@@ -1,4 +1,4 @@
-/// <reference path="../src/bobril.d.ts"/>
+﻿/// <reference path="../src/bobril.d.ts"/>
 /// <reference path="../src/bobril.onkey.d.ts"/>
 (function (b) {
     function buildParam(ev) {
@@ -7,10 +7,12 @@
             ctrl: ev.ctrlKey,
             alt: ev.altKey,
             meta: ev.metaKey || false,
-            which: ev.which || ev.keyCode,
+            which: ev.which || ev.keyCode
         };
     }
+
     var preventDefault = b.preventDefault;
+
     function emitOnKeyDown(ev, target, node) {
         if (!node)
             return false;

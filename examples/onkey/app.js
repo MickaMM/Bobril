@@ -4,11 +4,12 @@ var OnKeyApp;
 (function (OnKeyApp) {
     function h(tag) {
         var args = [];
-        for (var _i = 1; _i < arguments.length; _i++) {
-            args[_i - 1] = arguments[_i];
+        for (var _i = 0; _i < (arguments.length - 1); _i++) {
+            args[_i] = arguments[_i + 1];
         }
         return { tag: tag, children: args };
     }
+
     var KeyUpDown = (function () {
         function KeyUpDown(down, value) {
             this.down = down;
@@ -20,6 +21,7 @@ var OnKeyApp;
         };
         return KeyUpDown;
     })();
+
     var KeyPress = (function () {
         function KeyPress(value) {
             this.value = value;
@@ -30,33 +32,40 @@ var OnKeyApp;
         };
         return KeyPress;
     })();
+
     var evs = [];
+
     function addEvent(e) {
         evs.unshift(e);
         if (evs.length > 15)
             evs.pop();
         b.invalidate();
     }
+
     var TrackKeys = (function () {
         function TrackKeys() {
         }
         TrackKeys.postInitDom = function (ctx, me, element) {
             element.focus();
         };
+
         TrackKeys.onKeyDown = function (ctx, event) {
             ctx.data.onAdd(new KeyUpDown(true, event));
             return false;
         };
+
         TrackKeys.onKeyUp = function (ctx, event) {
             ctx.data.onAdd(new KeyUpDown(false, event));
             return false;
         };
+
         TrackKeys.onKeyPress = function (ctx, event) {
             ctx.data.onAdd(new KeyPress(event));
             return false;
         };
         return TrackKeys;
     })();
+
     b.init(function () {
         return [
             {
@@ -67,7 +76,9 @@ var OnKeyApp;
                 children: [
                     h("h1", "OnKey demo"),
                     h("p", "Press keys on keyboard and events will be displayed below (last is on top)"),
-                    h("ul", evs.map(function (e) { return h("li", e.toString()); }))
+                    h("ul", evs.map(function (e) {
+                        return h("li", e.toString());
+                    }))
                 ]
             }
         ];

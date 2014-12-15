@@ -1,13 +1,18 @@
 var TodoApp;
 (function (TodoApp) {
     var Task = (function () {
-        function Task(id, name, completed) {
+        function Task(id, name, completed, isInEditMode) {
+            if (isInEditMode === void 0) { isInEditMode = false; }
             this.id = id;
             this.name = name;
             this.completed = completed;
+            this.isInEditMode = isInEditMode;
         }
         Task.prototype.setStatus = function (completed) {
             this.completed = completed;
+        };
+        Task.prototype.setEditMode = function (isEdit) {
+            this.isInEditMode = isEdit;
         };
         Task.prototype.setName = function (name) {
             this.name = name;
@@ -17,13 +22,14 @@ var TodoApp;
     TodoApp.Task = Task;
     var Tasks = (function () {
         function Tasks() {
-            this.storageItemsKey = "todoApp.taskListItems";
-            this.storageCounterKey = "todoApp.taskListCounter";
-            this.filterAll = "all";
-            this.filterActive = "active";
-            this.filterCompleted = "completed";
+            this.storageItemsKey = 'todoApp.taskListItems';
+            this.storageCounterKey = 'todoApp.taskListCounter';
+            this.filterAll = 'all';
+            this.filterActive = 'active';
+            this.filterCompleted = 'completed';
             this.items = [];
             this.counter = 0;
+            this.filter = 'all';
         }
         Tasks.prototype.saveToStorage = function () {
             localStorage.setItem(this.storageItemsKey, JSON.stringify(this.items));
@@ -34,25 +40,28 @@ var TodoApp;
             if (storageItems) {
                 for (var i = 0; i < storageItems.length; i++) {
                     var item = storageItems[i];
-                    this.items.push(new Task(item.id, item.name, item.completed));
+                    this.items.push(new Task(item.id, item.name, item.completed, item.isInEditMode));
                 }
             }
             var counter = JSON.parse(localStorage.getItem(this.storageCounterKey));
-            if (typeof (counter) === "number") {
+            if (typeof (counter) === 'number') {
                 this.counter = counter;
             }
         };
-        Tasks.prototype.getFilteredItems = function (filter) {
+        Tasks.prototype.setFilter = function (filterValue) {
+            this.filter = filterValue;
+        };
+        Tasks.prototype.getFilteredItems = function () {
             var _this = this;
             return this.items.filter(function (item, index, array) {
-                return filter === _this.filterAll || filter === _this.filterActive && !item.completed || filter === _this.filterCompleted && item.completed;
+                return _this.filter === _this.filterAll || _this.filter === _this.filterActive && !item.completed || _this.filter === _this.filterCompleted && item.completed;
             });
         };
         Tasks.prototype.getItemsCount = function () {
             return this.items.length;
         };
         Tasks.prototype.addTask = function (name) {
-            this.items.push(new Task(++this.counter, name, false));
+            this.items.push(new Task(this.counter++, name, false));
             this.saveToStorage();
         };
         Tasks.prototype.markTaskAsCompleted = function (id) {
@@ -62,6 +71,7 @@ var TodoApp;
         Tasks.prototype.markAllTasksAsCompleted = function () {
             for (var i = 0; i < this.items.length; i++) {
                 this.markTaskAsCompleted(this.items[i].id);
+                this.setTaskEditMode(this.items[i].id, false);
             }
             this.saveToStorage();
         };
@@ -72,6 +82,7 @@ var TodoApp;
         Tasks.prototype.markAllTasksAsActive = function () {
             for (var i = 0; i < this.items.length; i++) {
                 this.markTaskAsActive(this.items[i].id);
+                this.setTaskEditMode(this.items[i].id, false);
             }
             this.saveToStorage();
         };
@@ -100,6 +111,9 @@ var TodoApp;
             this.findTaskById(taskId).setStatus(status);
             this.saveToStorage();
         };
+        Tasks.prototype.setTaskEditMode = function (taskId, inEditMode) {
+            this.findTaskById(taskId).setEditMode(inEditMode);
+        };
         Tasks.prototype.setTaskName = function (taskId, name) {
             this.findTaskById(taskId).setName(name);
             this.saveToStorage();
@@ -111,6 +125,9 @@ var TodoApp;
         };
         Tasks.prototype.isTaskCompleted = function (taskId) {
             return this.findTaskById(taskId).completed;
+        };
+        Tasks.prototype.isInEditMode = function (taskId) {
+            return this.findTaskById(taskId).isInEditMode;
         };
         Tasks.prototype.findTaskById = function (taskId) {
             for (var i = 0; i < this.items.length; i++) {
@@ -131,4 +148,3 @@ var TodoApp;
     })();
     TodoApp.Tasks = Tasks;
 })(TodoApp || (TodoApp = {}));
-//# sourceMappingURL=model.js.map

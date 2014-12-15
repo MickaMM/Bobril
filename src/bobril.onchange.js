@@ -1,12 +1,14 @@
-/// <reference path="../src/bobril.d.ts"/>
+﻿/// <reference path="../src/bobril.d.ts"/>
 /// <reference path="../src/bobril.onchange.d.ts"/>
 (function (b) {
     var bvalue = "b$value";
     var tvalue = "value";
+
     function isCheckboxlike(el) {
         var t = el.type;
         return t === "checkbox" || t === "radio";
     }
+
     function stringArrayEqual(a1, a2) {
         var l = a1.length;
         if (l !== a2.length)
@@ -17,6 +19,7 @@
         }
         return true;
     }
+
     function stringArrayContains(a, v) {
         for (var j = 0, l = a.length; j < l; j++) {
             if (a[j] === v)
@@ -24,6 +27,7 @@
         }
         return false;
     }
+
     function selectedArray(options) {
         var res = [];
         for (var j = 0; j < options.length; j++) {
@@ -32,6 +36,7 @@
         }
         return res;
     }
+
     var prevSetValueCallback = b.setSetValue(function (el, node, newValue, oldValue) {
         var tagName = el.tagName;
         var isSelect = tagName === "SELECT";
@@ -59,25 +64,21 @@
                     if (stringArrayEqual(currentMulti, newValue)) {
                         emitDiff = true;
                     }
-                }
-                else {
+                } else {
                     emitDiff = true;
                 }
             }
-        }
-        else if (isInput || isSelect) {
+        } else if (isInput || isSelect) {
             if (isInput && isCheckboxlike(el)) {
                 var currentChecked = el.checked;
                 if (newValue !== currentChecked) {
                     if (oldValue === undefined || currentChecked === oldValue || newValue !== node.ctx[bvalue]) {
                         el.checked = newValue;
-                    }
-                    else {
+                    } else {
                         emitDiff = true;
                     }
                 }
-            }
-            else {
+            } else {
                 var isCombobox = isSelect && el.size < 2;
                 var currentValue = (el[tvalue]);
                 if (newValue !== currentValue) {
@@ -85,8 +86,7 @@
                         if (isSelect) {
                             if (newValue === "") {
                                 el.selectedIndex = isCombobox ? 0 : -1;
-                            }
-                            else {
+                            } else {
                                 el[tvalue] = newValue;
                             }
                             if (newValue !== "" || isCombobox) {
@@ -95,12 +95,10 @@
                                     emitDiff = true;
                                 }
                             }
-                        }
-                        else {
+                        } else {
                             el[tvalue] = newValue;
                         }
-                    }
-                    else {
+                    } else {
                         emitDiff = true;
                     }
                 }
@@ -108,19 +106,14 @@
         }
         if (emitDiff) {
             emitOnChange(null, el, node);
-        }
-        else {
+        } else {
             node.ctx[bvalue] = newValue;
         }
     });
+
     function emitOnChange(ev, target, node) {
-        if (target && target.nodeName === "OPTION") {
-            target = document.activeElement;
-            node = b.deref(target);
-        }
-        if (!node) {
+        if (!node)
             return false;
-        }
         var c = node.component;
         if (!c)
             return false;
@@ -136,8 +129,7 @@
                 ctx[bvalue] = vs;
                 c.onChange(ctx, vs);
             }
-        }
-        else if (isCheckboxlike(target)) {
+        } else if (isCheckboxlike(target)) {
             if (target.type === "radio") {
                 var radios = document.getElementsByName(target.name);
                 for (var j = 0; j < radios.length; j++) {
@@ -157,16 +149,14 @@
                         radiocomponent.onChange(radioctx, vrb);
                     }
                 }
-            }
-            else {
+            } else {
                 var vb = target.checked;
                 if (ctx[bvalue] !== vb) {
                     ctx[bvalue] = vb;
                     c.onChange(ctx, vb);
                 }
             }
-        }
-        else {
+        } else {
             var v = target.value;
             if (ctx[bvalue] !== v) {
                 ctx[bvalue] = v;
@@ -175,6 +165,7 @@
         }
         return false;
     }
+
     var events = ["input", "cut", "paste", "keydown", "keypress", "keyup", "click"];
     for (var i = 0; i < events.length; i++)
         b.addEvent(events[i], 100, emitOnChange);

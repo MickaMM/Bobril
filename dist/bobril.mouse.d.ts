@@ -1,8 +1,3 @@
-interface ICoords {
-    x: number;
-    y: number;
-}
-
 interface IMouseEvent extends ICoords {
 
 }

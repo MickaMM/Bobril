@@ -9,7 +9,7 @@
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <DebugType>full</DebugType>
     <DebugSymbols>true</DebugSymbols>
-    <TypeScriptToolsVersion>1.1</TypeScriptToolsVersion>
+    <TypeScriptToolsVersion>1.0</TypeScriptToolsVersion>
     <UseIISExpress>true</UseIISExpress>
     <IISExpressSSLPort />
     <IISExpressAnonymousAuthentication />
@@ -58,7 +58,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Content Include="examples\basic\index.html" />
-    <Content Include="examples\focus\index.html" />
     <Content Include="examples\game\index.html" />
     <Content Include="examples\index.html" />
     <Content Include="examples\input\index.html" />
@@ -76,7 +75,6 @@
   <ItemGroup />
   <ItemGroup>
     <TypeScriptCompile Include="examples\basic\app.ts" />
-    <TypeScriptCompile Include="examples\focus\app.ts" />
     <TypeScriptCompile Include="examples\game\app.ts" />
     <TypeScriptCompile Include="examples\input\app.ts" />
     <TypeScriptCompile Include="examples\media\app.ts" />
@@ -90,8 +88,6 @@
     <TypeScriptCompile Include="examples\todo\model.ts" />
     <TypeScriptCompile Include="examples\vg\app.ts" />
     <TypeScriptCompile Include="src\bobril.d.ts" />
-    <TypeScriptCompile Include="src\bobril.focus.d.ts" />
-    <TypeScriptCompile Include="src\bobril.focus.ts" />
     <TypeScriptCompile Include="src\bobril.media.d.ts" />
     <TypeScriptCompile Include="src\bobril.media.ts" />
     <TypeScriptCompile Include="src\bobril.mouse.d.ts" />
@@ -100,8 +96,6 @@
     <TypeScriptCompile Include="src\bobril.onchange.ts" />
     <TypeScriptCompile Include="src\bobril.router.d.ts" />
     <TypeScriptCompile Include="src\bobril.router.ts" />
-    <TypeScriptCompile Include="src\bobril.scroll.d.ts" />
-    <TypeScriptCompile Include="src\bobril.scroll.ts" />
     <TypeScriptCompile Include="src\bobril.swipe.d.ts" />
     <TypeScriptCompile Include="src\bobril.swipe.ts" />
     <TypeScriptCompile Include="src\bobril.onkey.d.ts" />

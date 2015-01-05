@@ -41,15 +41,9 @@ if (!Object.create) {
     }
 }
 
-b = ((window: Window, document: Document): IBobrilStatic => {
-    function assert(shoudBeTrue: boolean, messageIfFalse?: string) {
-        if (DEBUG && !shoudBeTrue)
-            throw Error(messageIfFalse || "assertion failed");
-    }
-
-    var objectToString = {}.toString;
-    var isArray = Array.isArray || ((a: any) => objectToString.call(a) === "[object Array]");
-    var objectKeys = Object.keys || ((obj: any) => {
+// Object keys polyfill
+if (!Object.keys) {
+    Object.keys = ((obj: any) => {
         var keys = <string[]>[];
         for (var i in obj) {
             if (obj.hasOwnProperty(i)) {
@@ -58,6 +52,22 @@ b = ((window: Window, document: Document): IBobrilStatic => {
         }
         return keys;
     });
+}
+
+// Array isArray polyfill
+if (!Array.isArray) {
+    var objectToString = {}.toString;
+    Array.isArray = ((a: any) => objectToString.call(a) === "[object Array]");
+}
+
+b = ((window: Window, document: Document): IBobrilStatic => {
+    function assert(shoudBeTrue: boolean, messageIfFalse?: string) {
+        if (DEBUG && !shoudBeTrue)
+            throw Error(messageIfFalse || "assertion failed");
+    }
+
+    var isArray = Array.isArray;
+    var objectKeys = Object.keys;
 
     function createTextNode(content: string): Text {
         return document.createTextNode(content);
@@ -84,6 +94,15 @@ b = ((window: Window, document: Document): IBobrilStatic => {
         return prev;
     }
 
+    var setStyleCallback: (newValue: any) => void = (): void => {
+    }
+
+    function setSetStyle(callback: (newValue: any) => void): (newValue: any) => void {
+        var prev = setStyleCallback;
+        setStyleCallback = callback;
+        return prev;
+    }
+
     function updateElement(n: IBobrilCacheNode, el: HTMLElement, newAttrs: IBobrilAttributes, oldAttrs: IBobrilAttributes): IBobrilAttributes {
         if (!newAttrs) return undefined;
         var attrName: string, newAttr: any, oldAttr: any, valueOldAttr: any, valueNewAttr: any;
@@ -100,14 +119,19 @@ b = ((window: Window, document: Document): IBobrilStatic => {
                 oldAttrs[attrName] = newAttr;
                 if (attrName === "style") {
                     if (isObject(newAttr)) {
+                        setStyleCallback(newAttr);
                         var rule: string;
                         if (isObject(oldAttr)) {
-                            for (rule in newAttr) {
-                                var v = newAttr[rule];
-                                if (oldAttr[rule] !== v) el.style[<any>rule] = v;
-                            }
                             for (rule in oldAttr) {
                                 if (!(rule in newAttr)) el.style[<any>rule] = "";
+                            }
+                            for (rule in newAttr) {
+                                var v = newAttr[rule];
+                                if (v !== undefined) {
+                                    if (oldAttr[rule] !== v) el.style[<any>rule] = v;
+                                } else {
+                                    el.style[<any>rule] = "";
+                                }
                             }
                         } else {
                             if (oldAttr)
@@ -285,7 +309,7 @@ b = ((window: Window, document: Document): IBobrilStatic => {
     var rootCacheChildren: Array<IBobrilCacheNode> = [];
 
     function vdomPath(n: Node): IBobrilCacheNode[] {
-        var res:IBobrilCacheNode[] = [];
+        var res: IBobrilCacheNode[] = [];
         if (n == null) return res;
         var root = document.body;
         var nodeStack: Node[] = [];
@@ -324,18 +348,23 @@ b = ((window: Window, document: Document): IBobrilStatic => {
         var component = n.component;
         var backupInNamespace = inNamespace;
         var backupInSvg = inSvg;
+        var bigChange = false;
         if (component && c.ctx != null) {
-            if (component.shouldChange)
-                if (!component.shouldChange(c.ctx, n, c))
-                    return c;
-            (<any>c.ctx).data = n.data || {};
-            c.component = component;
-            if (component.render)
-                component.render(c.ctx, n, c);
+            if (component.id !== c.component.id) {
+                bigChange = true;
+            } else {
+                if (component.shouldChange)
+                    if (!component.shouldChange(c.ctx, n, c))
+                        return c;
+                (<any>c.ctx).data = n.data || {};
+                c.component = component;
+                if (component.render)
+                    component.render(c.ctx, n, c);
+            }
         }
         var el: any;
-        if (component && c.ctx == null) {
-            // old one was not even component => recreate
+        if (bigChange || (component && c.ctx == null)) {
+            // it is big change of component.id or old one was not even component => recreate
         } else if (n.tag === "/") {
             el = c.element;
             if (isArray(el)) el = el[0];
@@ -865,13 +894,17 @@ b = ((window: Window, document: Document): IBobrilStatic => {
         }
     }
 
+    var emptyObject = {};
+
     function mergeComponents(c1: IBobrilComponent, c2: IBobrilComponent) {
         var res = Object.create(c1);
         for (var i in c2) {
-            if (c2.hasOwnProperty(i)) {
+            if (!(i in <any>emptyObject)) {
                 var m = (<any>c2)[i];
                 var origM = (<any>c1)[i];
-                if (typeof (m) == "function" && origM) {
+                if (i === "id") {
+                    res[i] = ((origM != null) ? origM : "") + "/" + m;
+                } else if (typeof m === "function" && origM!=null && typeof origM === "function") {
                     res[i] = merge(origM, m);
                 } else {
                     res[i] = m;
@@ -920,6 +953,7 @@ b = ((window: Window, document: Document): IBobrilStatic => {
         updateChildren: updateChildren,
         callPostCallbacks: callPostCallbacks,
         setSetValue: setSetValue,
+        setSetStyle: setSetStyle,
         init: init,
         isArray: isArray,
         uptime: () => uptime,

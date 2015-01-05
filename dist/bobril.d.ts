@@ -11,6 +11,8 @@ interface IBobrilStatic {
     callPostCallbacks(): void;
     // Set update DOM attribute value callback, returns previous callback to allow chaining
     setSetValue(callback: (el: Element, node: IBobrilNode, newValue: any, oldValue: any) => void): (el: Element, node: IBobrilNode, newValue: any, oldValue: any) => void;
+    // Set update DOM attribute style callback by object, returns previous callback to allow chaining
+    setSetStyle(callback: (newValue: any) => void): (newValue: any) => void;
     // factory returns string|boolean|IBobrilNode|(string|boolean|IBobrilNode)[]
     init(factory: () => any): void;
     // recreate whole vdom in next frame, next invalidates before next frame are noop
@@ -53,6 +55,9 @@ interface IBobrilAttributes {
 }
 
 interface IBobrilComponent {
+    // if id of old node is different from new node it is considered completely different so init will be called before render directly
+    // it does prevent calling render method twice on same node
+    id?: string;
     // called before new node in vdom should be created, me members (tag, attrs, children) could be modified, ctx is initialized to { data: me.data||{} }
     init? (ctx: Object, me: IBobrilNode): void;
     // in case of update after shouldChange returns true, you can do any update/init tasks, ctx.data is updated to me.data and oldMe.component updated to me.component before calling this

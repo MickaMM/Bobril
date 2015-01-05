@@ -66,8 +66,10 @@
     <Content Include="examples\mouseenter\index.html" />
     <Content Include="examples\mouse\index.html" />
     <Content Include="examples\onkey\index.html" />
+    <Content Include="examples\opacity\index.html" />
     <Content Include="examples\router2\index.html" />
     <Content Include="examples\router\index.html" />
+    <Content Include="examples\stickyheader\index.html" />
     <Content Include="examples\todo\delete.png" />
     <Content Include="examples\todo\index.html" />
     <Content Include="examples\todo\styles.css" />
@@ -83,8 +85,10 @@
     <TypeScriptCompile Include="examples\mouseenter\app.ts" />
     <TypeScriptCompile Include="examples\mouse\app.ts" />
     <TypeScriptCompile Include="examples\onkey\app.ts" />
+    <TypeScriptCompile Include="examples\opacity\app.ts" />
     <TypeScriptCompile Include="examples\router2\app.ts" />
     <TypeScriptCompile Include="examples\router\app.ts" />
+    <TypeScriptCompile Include="examples\stickyheader\app.ts" />
     <TypeScriptCompile Include="examples\todo\app.ts" />
     <TypeScriptCompile Include="examples\todo\components.ts" />
     <TypeScriptCompile Include="examples\todo\model.ts" />
@@ -98,6 +102,8 @@
     <TypeScriptCompile Include="src\bobril.mouse.ts" />
     <TypeScriptCompile Include="src\bobril.onchange.d.ts" />
     <TypeScriptCompile Include="src\bobril.onchange.ts" />
+    <TypeScriptCompile Include="src\bobril.promise.d.ts" />
+    <TypeScriptCompile Include="src\bobril.promise.ts" />
     <TypeScriptCompile Include="src\bobril.router.d.ts" />
     <TypeScriptCompile Include="src\bobril.router.ts" />
     <TypeScriptCompile Include="src\bobril.scroll.d.ts" />
@@ -113,6 +119,7 @@
     <TypeScriptCompile Include="test\helpers.ts" />
     <TypeScriptCompile Include="test\jasmine.d.ts" />
     <TypeScriptCompile Include="test\livecycle.ts" />
+    <TypeScriptCompile Include="test\promise.ts" />
     <TypeScriptCompile Include="test\sandbox.ts" />
     <TypeScriptCompile Include="test\vdom.ts" />
   </ItemGroup>

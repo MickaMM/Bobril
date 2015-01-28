@@ -9,7 +9,7 @@
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <DebugType>full</DebugType>
     <DebugSymbols>true</DebugSymbols>
-    <TypeScriptToolsVersion>1.1</TypeScriptToolsVersion>
+    <TypeScriptToolsVersion>1.4</TypeScriptToolsVersion>
     <UseIISExpress>true</UseIISExpress>
     <IISExpressSSLPort />
     <IISExpressAnonymousAuthentication />
@@ -60,10 +60,14 @@
     <Content Include="examples\basic\index.html" />
     <Content Include="examples\focus\index.html" />
     <Content Include="examples\game\index.html" />
+    <Content Include="examples\hanoitower\index.html" />
     <Content Include="examples\index.html" />
     <Content Include="examples\input\index.html" />
+    <Content Include="examples\libsize\data.js" />
+    <Content Include="examples\libsize\index.html" />
     <Content Include="examples\media\index.html" />
     <Content Include="examples\mouseenter\index.html" />
+    <Content Include="examples\mouseOwner\index.html" />
     <Content Include="examples\mouse\index.html" />
     <Content Include="examples\onkey\index.html" />
     <Content Include="examples\opacity\index.html" />
@@ -80,14 +84,18 @@
     <TypeScriptCompile Include="examples\basic\app.ts" />
     <TypeScriptCompile Include="examples\focus\app.ts" />
     <TypeScriptCompile Include="examples\game\app.ts" />
+    <TypeScriptCompile Include="examples\hanoitower\app.ts" />
     <TypeScriptCompile Include="examples\input\app.ts" />
+    <TypeScriptCompile Include="examples\libsize\app.ts" />
     <TypeScriptCompile Include="examples\media\app.ts" />
     <TypeScriptCompile Include="examples\mouseenter\app.ts" />
+    <TypeScriptCompile Include="examples\mouseOwner\app.ts" />
     <TypeScriptCompile Include="examples\mouse\app.ts" />
     <TypeScriptCompile Include="examples\onkey\app.ts" />
     <TypeScriptCompile Include="examples\opacity\app.ts" />
     <TypeScriptCompile Include="examples\router2\app.ts" />
     <TypeScriptCompile Include="examples\router\app.ts" />
+    <TypeScriptCompile Include="examples\sandbox\app.ts" />
     <TypeScriptCompile Include="examples\stickyheader\app.ts" />
     <TypeScriptCompile Include="examples\todo\app.ts" />
     <TypeScriptCompile Include="examples\todo\components.ts" />
@@ -100,6 +108,8 @@
     <TypeScriptCompile Include="src\bobril.media.ts" />
     <TypeScriptCompile Include="src\bobril.mouse.d.ts" />
     <TypeScriptCompile Include="src\bobril.mouse.ts" />
+    <TypeScriptCompile Include="src\bobril.mouse2.d.ts" />
+    <TypeScriptCompile Include="src\bobril.mouse2.ts" />
     <TypeScriptCompile Include="src\bobril.onchange.d.ts" />
     <TypeScriptCompile Include="src\bobril.onchange.ts" />
     <TypeScriptCompile Include="src\bobril.promise.d.ts" />
@@ -108,6 +118,7 @@
     <TypeScriptCompile Include="src\bobril.router.ts" />
     <TypeScriptCompile Include="src\bobril.scroll.d.ts" />
     <TypeScriptCompile Include="src\bobril.scroll.ts" />
+    <TypeScriptCompile Include="src\bobril.styleshim.ts" />
     <TypeScriptCompile Include="src\bobril.swipe.d.ts" />
     <TypeScriptCompile Include="src\bobril.swipe.ts" />
     <TypeScriptCompile Include="src\bobril.onkey.d.ts" />

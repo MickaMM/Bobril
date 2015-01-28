@@ -17,32 +17,32 @@ module MouseApp {
 
         static onClick(ctx: ITrackClickCtx, event: IMouseEvent): boolean {
             ctx.data.onAdd(new EventWrapper(event, "Click"));
-            return false;
+            return true;
         }
 
         static onDoubleClick(ctx: ITrackClickCtx, event: IMouseEvent): boolean {
             ctx.data.onAdd(new EventWrapper(event, "Double Click"));
-            return false;
+            return true;
         }
 
         static onMouseDown(ctx: ITrackClickCtx, event: IMouseEvent): boolean {
             ctx.data.onAdd(new EventWrapper(event, "Mouse Down"));
-            return false;
+            return true;
         }
 
         static onMouseUp(ctx: ITrackClickCtx, event: IMouseEvent): boolean {
             ctx.data.onAdd(new EventWrapper(event, "Mouse Up"));
-            return false;
+            return true;
         }
 
         static onSwipeLeft(ctx: ITrackClickCtx, event: IMouseEvent): boolean {
             ctx.data.onAdd(new EventWrapper(event, "Swipe Left"));
-            return false;
+            return true;
         }
 
         static onSwipeRight(ctx: ITrackClickCtx, event: IMouseEvent): boolean {
             ctx.data.onAdd(new EventWrapper(event, "Swipe right"));
-            return false;
+            return true;
         }
     }
 
@@ -79,7 +79,7 @@ module MouseApp {
         return [
             {
                 tag: "button",
-                attrs: { style: { fontSize: "3em", marginBottom: "10px" } },
+                style: { fontSize: "3em", marginBottom: "10px" },
                 children: "Click button",
                 component: TrackClick,
                 data: {
@@ -88,12 +88,12 @@ module MouseApp {
             },
             {
                 tag: "div",
-                attrs: { style: { border: "1px solid", minHeight: "120px" } },
+                style: { border: "1px solid", minHeight: "120px" },
                 component: TrackClick,
                 data: {
                     onAdd: addEvent
                 },
-                children: [{ tag: "div", children: "Click here or swipe!", attrs: { style: { fontSize: "2em" } } }]
+                children: [{ tag: "div", children: "Click here or swipe!", style: { fontSize: "2em" } }]
                             .concat(events.map((ev: IEvent) => e(ev)))
             }
         ];

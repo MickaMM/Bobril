@@ -15,7 +15,7 @@ var StickyHeaderApp;
         for (var _i = 2; _i < arguments.length; _i++) {
             args[_i - 2] = arguments[_i];
         }
-        return { tag: tag, attrs: { style: style }, children: args };
+        return { tag: tag, style: style, children: args };
     }
     var OnChangeComponent = (function () {
         function OnChangeComponent() {
@@ -31,7 +31,7 @@ var StickyHeaderApp;
     function smallbutton(onAction, content) {
         return {
             tag: "button",
-            attrs: { style: { width: "2em", height: "2em" } },
+            style: { width: "2em", height: "2em" },
             component: {
                 onClick: function () {
                     onAction();
@@ -109,13 +109,12 @@ var StickyHeaderApp;
     }
     var StickyHeaderFixedComp = {
         render: function (ctx, me) {
-            me.attrs = me.attrs || {};
-            me.attrs.style = me.attrs.style || {};
-            me.attrs.style.position = "fixed";
-            me.attrs.style.marginTop = "0px";
-            me.attrs.style.zIndex = "3";
-            me.attrs.style.left = "0";
-            me.attrs.style.top = "0";
+            me.style = me.style || {};
+            me.style.position = "fixed";
+            me.style.marginTop = "0px";
+            me.style.zIndex = "3";
+            me.style.left = "0";
+            me.style.top = "0";
         }
     };
     function cloneObj(o) {
@@ -133,12 +132,7 @@ var StickyHeaderApp;
             ctx.lastSticky = ctx.sticky;
             ctx.borderCollapse = ctx.data.borderCollapse;
             if (ctx.sticky) {
-                var clone = cloneObj(header);
-                if (clone.attrs) {
-                    clone.attrs = cloneObj(clone.attrs);
-                    if (clone.attrs.style)
-                        clone.attrs.style = cloneObj(clone.attrs.style);
-                }
+                var clone = b.cloneNode(header);
                 b.postEnhance(clone, StickyHeaderFixedComp);
                 clone.key = "StickyH";
                 me.children = [header, clone, ctx.data.body];
@@ -191,7 +185,7 @@ var StickyHeaderApp;
     function stickyTableFix(borderCollapse, style, header, body) {
         style = cloneObj(style);
         style.borderCollapse = (borderCollapse ? "collapse" : "separate");
-        return { tag: "table", attrs: { style: style }, data: { borderCollapse: borderCollapse, header: header, body: body }, component: StickyTableFixComp };
+        return { tag: "table", style: style, data: { borderCollapse: borderCollapse, header: header, body: body }, component: StickyTableFixComp };
     }
     function stickyUpdateDomAbs(ctx, me, element) {
         var scrollableArea = element.parentElement;
@@ -264,14 +258,15 @@ var StickyHeaderApp;
         },
         render: function (ctx, me) {
             var header = ctx.data.header;
-            var headerClone = cloneObj(header);
-            var attrsClone = cloneObj(me.attrs);
-            attrsClone.style = cloneObj(attrsClone.style);
-            attrsClone.style.border = "none";
+            var headerClone = b.cloneNode(header);
+            var styleClone = cloneObj(me.style);
+            styleClone.border = "none";
             me.children = [
                 {
                     tag: "table",
                     attrs: me.attrs,
+                    className: me.className,
+                    style: me.style,
                     children: [
                         header,
                         ctx.data.body
@@ -279,15 +274,19 @@ var StickyHeaderApp;
                 },
                 {
                     tag: "div",
-                    attrs: { style: { visibility: "hidden", position: "absolute" } },
+                    style: { visibility: "hidden", position: "absolute" },
                     children: {
                         tag: "table",
-                        attrs: attrsClone,
+                        className: me.className,
+                        attrs: me.attrs,
+                        style: styleClone,
                         children: headerClone
                     }
                 }
             ];
-            me.attrs = { style: { position: "relative" } };
+            me.attrs = undefined;
+            me.className = undefined;
+            me.style = { position: "relative" };
         },
         postInitDom: function (ctx, me, element) {
             b.addOnScroll(ctx.onScroll);
@@ -303,7 +302,7 @@ var StickyHeaderApp;
     function stickyTableAbs(borderCollapse, style, header, body) {
         style = cloneObj(style);
         style.borderCollapse = (borderCollapse ? "collapse" : "separate");
-        return { tag: "div", attrs: { style: style }, data: { header: header, body: body }, component: StickyTableAbsComp };
+        return { tag: "div", style: style, data: { header: header, body: body }, component: StickyTableAbsComp };
     }
     function headerCell(content) {
         return hs("th", { backgroundColor: "#ffc", border: "1px solid #300" }, content);
@@ -357,7 +356,7 @@ var StickyHeaderApp;
             }),
             {
                 tag: "div",
-                attrs: { style: { height: "150px", width: "300px", overflow: "auto" } },
+                style: { height: "150px", width: "300px", overflow: "auto" },
                 component: ScrollableComp,
                 children: [
                     h("p", "Before table"),

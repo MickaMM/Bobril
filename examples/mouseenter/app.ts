@@ -21,7 +21,7 @@ module MouseEnterLeaveApp {
         }
 
         static render(ctx: ITrackClickCtx, me: IBobrilNode, oldMe?: IBobrilCacheNode): void {
-            me.attrs = { style: constructInnerStyle(ctx.backColor) };
+            me.style = constructInnerStyle(ctx.backColor);
         }
 
         static onMouseEnter(ctx: ITrackClickCtx, event: IMouseEvent): void {
@@ -42,20 +42,20 @@ module MouseEnterLeaveApp {
 
         static render(ctx: ITrackClickCtx, me: IBobrilNode, oldMe?: IBobrilCacheNode): void {
             me.tag = "div";
-            me.attrs = { style: constructOuterStyle(ctx.backColor) };
+            me.style = constructOuterStyle(ctx.backColor);
             me.children = {
                 tag: "span",
                 children: "Inner Span",
-                attrs: { style: constructInnerStyle("#B3C9DF") }
+                style: constructInnerStyle("#B3C9DF")
             };
 
             if (ctx.data.trackInner)
-                me.children.component = TrackInnerEvents;
+                (<IBobrilNode>me.children).component = TrackInnerEvents;
         }
 
        static onMouseEnter(ctx: ITrackClickCtx, event: IMouseEvent): void {
-            ctx.backColor = mouseEnter;
-            b.invalidate();
+           ctx.backColor = mouseEnter;
+           b.invalidate();
         }
 
         static onMouseLeave(ctx: ITrackClickCtx, event: IMouseEvent): void {
@@ -93,7 +93,7 @@ module MouseEnterLeaveApp {
             backgroundColor: backColor, 
             border: "1px solid #6492BF",
             color: "#FFFFFF",
-            height: "100px",
+            height: "162px",
             left: "62px",
             lineHeight: "98px",
             position: "absolute",
@@ -107,12 +107,12 @@ module MouseEnterLeaveApp {
         return [
             {
                 tag: "div",
-                attrs: { style: { height: "20px", width: "100px", backgroundColor: mouseEnter } },
+                style: { height: "20px", width: "100px", backgroundColor: mouseEnter },
                 children: "Mouse enter"
             },
             {
                 tag: "div",
-                attrs: { style: { height: "20px", width: "100px", backgroundColor: mouseLeave } },
+                style: { height: "20px", width: "100px", backgroundColor: mouseLeave },
                 children: "Mouse leave"
             },
             {

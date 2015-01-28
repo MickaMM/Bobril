@@ -7,9 +7,8 @@ var Coord = (function () {
         this.y = y;
     }
     Coord.prototype.hit = function (x, y) {
-        return Math.abs(this.x - x) < Coord.CLICKBUSTER_THRESHOLD && Math.abs(this.y - y) < Coord.CLICKBUSTER_THRESHOLD;
+        return Math.abs(this.x - x) < 50 /* Threshold */ && Math.abs(this.y - y) < 50 /* Threshold */;
     };
-    Coord.CLICKBUSTER_THRESHOLD = 50; // 25 pixels in any dimension is the limit for busting clicks.
     return Coord;
 })();
 var CoordList = (function () {
@@ -41,6 +40,33 @@ var CoordList = (function () {
     return CoordList;
 })();
 (function (b) {
+    var ownerCtx = null;
+    var invokingOwner;
+    function isMouseOwner(ctx) {
+        return ownerCtx === ctx;
+    }
+    function isMouseOwnerEvent() {
+        return invokingOwner;
+    }
+    function registerMouseOwner(ctx) {
+        ownerCtx = ctx;
+    }
+    function releaseMouseOwner() {
+        ownerCtx = null;
+    }
+    function invokeMouseOwner(handlerName, param) {
+        if (ownerCtx == null) {
+            return false;
+        }
+        var handler = ownerCtx.me.component[handlerName];
+        if (!handler) {
+            return false;
+        }
+        invokingOwner = true;
+        var stop = handler(ownerCtx, param);
+        invokingOwner = false;
+        return stop;
+    }
     var preventDefault = b.preventDefault;
     var now = b.now;
     var PREVENT_DURATION = 2500; // 2.5 seconds maximum from preventGhostClick call to click
@@ -130,7 +156,6 @@ var CoordList = (function () {
         var x = e.clientX;
         var y = e.clientY;
         var dist = Math.sqrt(Math.pow(x - touchStartX, 2) + Math.pow(y - touchStartY, 2));
-        var stop = false;
         if (tapping && diff < TAP_DURATION && dist < MOVE_TOLERANCE) {
             lastPreventedTime = now();
             // Blur the focused element (the button, probably) before firing the callback.
@@ -141,11 +166,12 @@ var CoordList = (function () {
             }
             var disabled = node.attrs && node.attrs["disabled"];
             if (typeof disabled === "undefined" || disabled === false) {
-                stop = emitClickEvent(ev, target, node, x, y);
+                if (!emitClickEvent(ev, target, node, x, y))
+                    touchCoordinates.remove(x, y); //if event was NOT consumed, we dont bust it(eg. onchange plugin needs it)
             }
         }
         resetState();
-        return stop;
+        return false;
     }
     function emitClickEvent(ev, target, node, x, y) {
         if (!node)
@@ -172,44 +198,50 @@ var CoordList = (function () {
     }
     function createHandler(handlerName) {
         return function (ev, target, node) {
-            if (!node)
-                return false;
             var param = buildParam(ev);
-            if (b.bubble(node, handlerName, param)) {
-                preventDefault(ev);
+            if (invokeMouseOwner(handlerName, param)) {
                 return true;
             }
-            return false;
-        };
-    }
-    function isValidMouseLeave(ev) {
-        var from = ev.fromElement;
-        var to = ev.toElement;
-        while (to) {
-            to = to.parentElement;
-            if (to == from) {
-                return false;
-            }
-        }
-        return true;
-    }
-    function createNoBubblingHandler(handlerName, validator) {
-        return function (ev, target, node) {
             if (!node)
                 return false;
-            var param = buildParam(ev);
-            var c = node.component;
-            if (c) {
-                if (validator && !validator(ev))
-                    return false;
-                var m = c[handlerName];
-                if (m) {
-                    m.call(c, node.ctx, param);
-                }
+            if (b.bubble(node, handlerName, param)) {
+                preventDefault(ev);
             }
             return false;
         };
     }
+    function mouseEnterAndLeave(ev, target, node) {
+        var param = buildParam(ev);
+        var fromPath = b.vdomPath(ev.fromElement);
+        var toPath = b.vdomPath(ev.toElement);
+        var common = 0;
+        while (common < fromPath.length && common < toPath.length && fromPath[common] === toPath[common])
+            common++;
+        var i = fromPath.length - 1;
+        var n;
+        var c;
+        while (i >= common) {
+            n = fromPath[i];
+            if (n) {
+                c = n.component;
+                if (c && c.onMouseLeave)
+                    c.onMouseLeave(n.ctx, param);
+            }
+            i--;
+        }
+        i = toPath.length - 1;
+        while (i >= common) {
+            n = toPath[i];
+            if (n) {
+                c = n.component;
+                if (c && c.onMouseEnter)
+                    c.onMouseEnter(n.ctx, param);
+            }
+            i--;
+        }
+        return false;
+    }
+    ;
     function hasPointerEventsNone(target) {
         var bNode = b.deref(target);
         return bNode && bNode.attrs && bNode.attrs.style && bNode.attrs.style.pointerEvents && bNode.attrs.style.pointerEvents == "none";
@@ -265,8 +297,7 @@ var CoordList = (function () {
     addEvent("mouseup", 2, buster);
     addEvent("click", 2, buster);
     addEvent("touchstart", 3, collectCoordinates);
-    addEvent("mouseover", 300, createNoBubblingHandler("onMouseEnter")); // bubbling mouseover and out are same basically same as nonbubling mouseenter and leave
-    addEvent("mouseout", 300, createNoBubblingHandler("onMouseLeave", isValidMouseLeave));
+    addEvent("mouseover", 300, mouseEnterAndLeave);
     addEvent("click", 400, createHandler("onClick"));
     addEvent("dblclick", 400, createHandler("onDoubleClick"));
     addEvent("mousedown", 400, createHandler("onMouseDown"));
@@ -274,10 +305,15 @@ var CoordList = (function () {
     addEvent("mouseup", 400, createHandler("onMouseUp"));
     addEvent("touchend", 400, createHandler("onMouseUp"));
     addEvent("mousemove", 400, createHandler("onMouseMove"));
+    addEvent("touchmove", 400, createHandler("onMouseMove"));
     addEvent("mouseover", 400, createHandler("onMouseOver"));
     addEvent("touchstart", 500, handleTouchStart);
     addEvent("touchcancel", 500, tapCanceled);
     addEvent("touchend", 500, handleTouchEnd);
     addEvent("touchmove", 500, tapCanceled);
+    b.registerMouseOwner = registerMouseOwner;
+    b.isMouseOwner = isMouseOwner;
+    b.isMouseOwnerEvent = isMouseOwnerEvent;
+    b.releaseMouseOwner = releaseMouseOwner;
 })(b);
 //# sourceMappingURL=bobril.mouse.js.map

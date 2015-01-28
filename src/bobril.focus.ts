@@ -64,7 +64,7 @@
         emitOnFocusChange();
     }
 
-    var events = ["fucus","blur","keydown","keyup","keypress","mousedown","mouseup","mousemove","touchstart","touchend"];
+    var events = ["focus","blur","keydown","keyup","keypress","mousedown","mouseup","mousemove","touchstart","touchend"];
     for (var i = 0; i < events.length; i++)
         b.addEvent(events[i], 50, <any>(b.ieVersion() ? emitOnFocusChangeIE : emitOnFocusChange));
 
@@ -73,20 +73,19 @@
     }
 
     function focused(): IBobrilCacheNode {
-        //emitOnFocusChange();
         return currentFocusedNode;
     }
+
     // set focus to bobril node in parameter usually should be called from postInitDom method
     function focus(node: IBobrilNode): void {
         if (node == null) return;
         var el = (<IBobrilCacheNode>node).element;
-        if (b.isArray(el)) el = el[0];
-        el.focus();
+        if (b.isArray(el)) el = (<Node[]>el)[0];
+        (<HTMLElement>el).focus();
         emitOnFocusChange();
     }
 
     b.focused = focused;
     b.focus = focus;
-
 })(b);
  

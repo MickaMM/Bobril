@@ -3,11 +3,13 @@
 var TestComponent = (function () {
     function TestComponent() {
         this.actions = "";
+        this.contexts = {};
     }
     TestComponent.prototype.init = function (ctx, me) {
         this.actions += "i:" + me.data.name + ";";
     };
     TestComponent.prototype.render = function (ctx, me, oldMe) {
+        this.contexts[me.data.name] = ctx;
         if (oldMe)
             this.actions += "ru:" + me.data.name + ";";
         else
@@ -168,6 +170,33 @@ describe("livecycle", function () {
         });
         waitsFor(function () { return done; });
     });
+    it("smallInvalidateUpdatesOnlyChild", function () {
+        var c = new TestComponent();
+        var state = 0;
+        var done = false;
+        var vdom = [{
+            tag: "div",
+            component: c,
+            data: { name: "1" },
+            children: {
+                tag: "div",
+                component: c,
+                data: { name: "2", change: true }
+            }
+        }];
+        b.init(function () {
+            setTimeout(function () {
+                c.actions = "";
+                b.invalidate(c.contexts["2"]);
+                setTimeout(function () {
+                    expect(c.actions).toBe("sc:2;ru:2;U:2;pu:2;");
+                    done = true;
+                }, 100);
+            }, 0);
+            return vdom;
+        });
+        waitsFor(function () { return done; });
+    });
     it("canFindDomInVdom"), function () {
         var done = false;
         var uid = 0;
@@ -191,9 +220,29 @@ describe("livecycle", function () {
         });
         waitsFor(function () { return done; });
     };
+    it("afterFrameCallback", function () {
+        var c = new TestComponent();
+        var state = 0;
+        var done = false;
+        expect(b.setAfterFrame(function (root) {
+            expect(root[0].data.name).toBe("1");
+            done = true;
+            b.setAfterFrame(function () {
+            });
+        })).not.toBeNull();
+        b.init(function () {
+            return [{
+                tag: "div",
+                component: c,
+                data: { name: "1" }
+            }];
+        });
+        waitsFor(function () { return done; });
+    });
     it("uptimeAndNowCouldBeCalled", function () {
         b.uptime();
         b.now();
+        b.frame();
     });
 });
 //# sourceMappingURL=livecycle.js.map

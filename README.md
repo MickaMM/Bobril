@@ -1,3 +1,4 @@
+![Bobril Logo](https://raw.githubusercontent.com/Bobris/Bobril/master/logo.png)
 Bobril
 ======
 
@@ -10,10 +11,11 @@ Features in core:
 - No additional dependencies
 - Virtual DOM diffing
 - Components remember state in VDom cache
+- Support for partial invalidates for even faster redraws
 - Normalization of Events
 - support for IE8+, Android 4.0+
 - batching of redrawing
-- under 10kb minified
+- under 11kb minified
 
 Features in extensions:
 - OnChange event and value attribute normalization
@@ -28,6 +30,7 @@ Features in extensions:
 - Scroll notification
 
 All extensions + core gziped are under 12kb
+Of course you don't need all extensions, it is pure a la carte, so actual application could be shorter.
 
 Near term planned extensions:
 
@@ -36,6 +39,21 @@ Longer term extensions:
 - Prevent exit
 - Ajax
 
-Uses Karma, Jasmine, Coverage for testing
+Uses NodeJs, NPM, TypeScript 1.4, Karma, Jasmine, Coverage
 
 MIT Licensed
+
+
+How to develop
+--------------
+
+Use `npm up` to download all needed node modules.
+
+For TypeScript compilation you can use Visual Studio (even free version is perfect)
+On other platforms you can use `gulp ts`.
+
+Start `gulp` for minification and generating statistic for LibSize example.
+
+`gulp pages` upload examples to GitHub pages.
+
+If you want to work on something create bug with description, so work is not duplicated.

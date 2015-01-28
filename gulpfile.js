@@ -130,19 +130,41 @@ gulp.task('calc', ['uglify'], function () {
       return str;
     }	
 	function logInfo(name,tslines,jssize,minsize,gzipsize) {
-	   console.log(padString(12,name)+' '+padString(5,tslines,true)+' '+padString(6,jssize,true)+' '+padString(6,minsize,true)+' '+padString(6,gzipsize,true));
+	    console.log(padString(12,name)+' '+padString(5,tslines,true)+' '+padString(6,jssize,true)+' '+padString(6,minsize,true)+' '+padString(6,gzipsize,true));
     }
 	logInfo('Name','Lines','Orig','Minif','Gzip');
 	var totaltslines=0,totaljssize=0,totalminsize=0,totalgzipsize=0;
 	distList.forEach(function(o) {
-	   totaltslines+=o.tslines;
-	   totaljssize+=o.jssize;
-	   totalminsize+=o.minsize;
-	   totalgzipsize+=o.gzipsize;
-	   logInfo(o.name,o.tslines,o.jssize,o.minsize,o.gzipsize);
+	    totaltslines+=o.tslines;
+	    totaljssize+=o.jssize;
+	    totalminsize+=o.minsize;
+	    totalgzipsize+=o.gzipsize;
+	    logInfo(o.name,o.tslines,o.jssize,o.minsize,o.gzipsize);
 	});
 	logInfo('Total Sum',totaltslines,totaljssize,totalminsize,totalgzipsize);
-	logInfo('Concat','','','',gzipSync(wholebuf).length);
+	var concatgzip = gzipSync(wholebuf).length;
+	logInfo('Concat','','','',concatgzip);
+	var data = {
+        parts: distList.map(function(item) { return { name: item.name, tslines: item.tslines, jssize: item.jssize, minsize: item.minsize, gzipsize: item.gzipsize }; }),
+		total: { tslines: totaltslines, jssize: totaljssize, minsize: totalminsize, gzipsize: totalgzipsize },
+		concatgzipsize: concatgzip
+		};
+	fs.writeFileSync("examples/libsize/data.js","var libSizeData="+JSON.stringify(data));
+});
+
+
+var alltsfilesToWatch = ['./src/**.ts','./examples/**.ts','./test/**.ts'];
+var alltsfilesToCompile = alltsfilesToWatch.concat(['!./src/**.d.ts','!./examples/**.d.ts','!./test/**.d.ts']);
+
+gulp.task('ts', function () {
+    gulp.watch(alltsfilesToWatch, ['compilets']);
+});
+
+gulp.task('compilets', function () {
+    var typescript = require('gulp-tsc');
+    return gulp.src(alltsfilesToCompile)
+        .pipe(typescript({ tscSearch:["bundle"], noImplicitAny:true, sourcemap:true, emitError: false }))
+        .pipe(gulp.dest('.'));
 });
 
 gulp.task('default', ['watch']);
